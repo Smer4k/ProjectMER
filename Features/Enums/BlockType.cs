@@ -44,4 +44,17 @@ public enum BlockType
 	/// Represents a locker.
 	/// </summary>
 	Locker = 7,
+<<<<<<< Updated upstream
+=======
+	
+	/// <summary>
+	/// Represents a door.
+	/// </summary>
+	Door = 8,
+	
+	/// <summary>
+	/// Represents a Interactable.
+	/// </summary>
+	Interactable = 9,
+>>>>>>> Stashed changes
 }

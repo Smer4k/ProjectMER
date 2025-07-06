@@ -169,7 +169,18 @@ public class SchematicObject : MonoBehaviour
 			return null;
 
 		GameObject gameObject = block.Create(this, parentTransform);
+<<<<<<< Updated upstream
 		NetworkServer.Spawn(gameObject);
+=======
+		if (block.BlockType != BlockType.Teleport)
+			NetworkServer.Spawn(gameObject);
+
+		// We return the parent for the door so that when deleting the schematic, the door is deleted
+		if (block.BlockType == BlockType.Door)
+		{
+			gameObject.transform.SetParent(parentTransform);
+		}
+>>>>>>> Stashed changes
 
 		// _attachedBlocks.Add(gameObject);
 		ObjectFromId.Add(block.ObjectId, gameObject.transform);

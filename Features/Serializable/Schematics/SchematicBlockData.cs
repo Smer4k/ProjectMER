@@ -2,10 +2,12 @@ using AdminToys;
 using GameCore;
 using InventorySystem.Items.Firearms.Attachments;
 using LabApi.Features.Wrappers;
+using MapGeneration;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
+using ProjectMER.Features.ToolGun;
 using UnityEngine;
 using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -41,6 +43,12 @@ public class SchematicBlockData
 			BlockType.Light => CreateLight(),
 			BlockType.Pickup => CreatePickup(schematicObject),
 			BlockType.Workstation => CreateWorkstation(),
+<<<<<<< Updated upstream
+=======
+			BlockType.Teleport => CreateTeleport(parentTransform),
+			BlockType.Door => CreateDoor(),
+			BlockType.Interactable => CreateInteractable(),
+>>>>>>> Stashed changes
 			_ => CreateEmpty(true)
 		};
 
@@ -51,6 +59,18 @@ public class SchematicBlockData
 		transform.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
 		transform.localScale = BlockType == BlockType.Empty && Scale == Vector3.zero ? Vector3.one : Scale;
 
+<<<<<<< Updated upstream
+=======
+		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
+		if (BlockType == BlockType.Door)
+		{
+			transform.SetParent(null);
+		}
+
+		if (BlockType == BlockType.Teleport)
+			transform.position += Vector3.up;
+		
+>>>>>>> Stashed changes
 		return gameObject;
 	}
 
@@ -138,4 +158,87 @@ public class SchematicBlockData
 
 		return workstation.gameObject;
 	}
+<<<<<<< Updated upstream
+=======
+
+	private GameObject CreateTeleport(Transform parentTransform)
+	{
+		GameObject gameObject = GameObject.Instantiate(new GameObject("Teleport"));
+		gameObject.AddComponent<BoxCollider>().isTrigger = true;
+		var teleport = gameObject.AddComponent<SchematicTeleportObject>();
+		teleport.Cooldown = Convert.ToSingle(Properties["Cooldown"]);
+		foreach (var target in (List<object>)Properties["Targets"])
+		{
+			teleport.Targets.Add(Convert.ToString(target));
+		}
+		teleport.Id = Name;
+		return gameObject;
+		
+		var position = parentTransform.position + Position;
+		Room room = RoomExtensions.GetRoomAtPosition(position);
+
+		position = room.Name == RoomName.Outside ? position : room.Transform.InverseTransformPoint(position);
+		string roomId = room.GetRoomStringId();
+
+		MapSchematic map = MapUtils.UntitledMap;
+
+		SerializableTeleport serializableTeleport = (SerializableTeleport)Activator.CreateInstance(ToolGunItem.TypesDictionary[ToolGunObjectType.Teleport]);
+		serializableTeleport.Room = roomId;
+		serializableTeleport.Index = room.GetRoomIndex();
+		serializableTeleport.Position = position + Vector3.up;
+		serializableTeleport.Scale = Scale == Vector3.zero ? Vector3.one : Scale;
+		serializableTeleport.Rotation = Rotation;
+		if (Properties.TryGetValue("Targets", out var targetsObj))
+		{
+			foreach (var target in (List<object>)targetsObj)
+			{
+				serializableTeleport.Targets.Add(Convert.ToString(target));
+			}
+		}
+		map.SpawnObject(Name, serializableTeleport);
+
+		foreach (MapEditorObject mapEditorObject in map.SpawnedObjects)
+		{
+			if (mapEditorObject.Id != Name)
+				continue;
+
+			IndicatorObject.TrySpawnOrUpdateIndicator(mapEditorObject);
+		}
+
+		return map.SpawnedObjects.Last().gameObject;
+	}
+	
+	private GameObject CreateDoor()
+	{
+		DoorVariant prefab = (DoorType)Convert.ToInt32(Properties["DoorType"]) switch
+		{
+			DoorType.Hcz or DoorType.HeavyContainmentDoor => PrefabManager.DoorHcz,
+			DoorType.Bulkdoor or DoorType.HeavyBulkDoor => PrefabManager.DoorHeavyBulk,
+			DoorType.Lcz or DoorType.LightContainmentDoor => PrefabManager.DoorLcz,
+			DoorType.Ez or DoorType.EntranceDoor => PrefabManager.DoorEz,
+			_ => PrefabManager.DoorEz
+		};
+		DoorVariant doorVariant = GameObject.Instantiate(prefab);
+		if (doorVariant.TryGetComponent(out DoorRandomInitialStateExtension doorRandomInitialStateExtension))
+			GameObject.Destroy(doorRandomInitialStateExtension);
+		
+		doorVariant.NetworkTargetState = Convert.ToBoolean(Properties["IsOpen"]);
+		doorVariant.ServerChangeLock(DoorLockReason.SpecialDoorFeature, Convert.ToBoolean(Properties["IsLocked"]));
+		doorVariant.RequiredPermissions = new DoorPermissionsPolicy(
+			(DoorPermissionFlags)Convert.ToUInt16(Properties["RequiredPermissions"]),
+			Convert.ToBoolean(Properties["RequireAll"]));
+		return doorVariant.gameObject;
+	}
+	
+	private GameObject CreateInteractable()
+	{
+		InvisibleInteractableToy interactableToy = GameObject.Instantiate(PrefabManager.InvisibleInteractableToy);
+		interactableToy.NetworkMovementSmoothing = 60;
+		interactableToy.NetworkShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(Properties["Shape"]);
+		interactableToy.NetworkInteractionDuration = float.Parse(Properties["InteractionDuration"].ToString());
+		interactableToy.NetworkIsLocked = bool.Parse(Properties["IsLocked"].ToString());
+
+		return interactableToy.gameObject;
+	}
+>>>>>>> Stashed changes
 }
