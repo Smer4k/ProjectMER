@@ -169,9 +169,9 @@ public class SchematicObject : MonoBehaviour
 			return null;
 
 		GameObject gameObject = block.Create(this, parentTransform);
-<<<<<<< Updated upstream
-		NetworkServer.Spawn(gameObject);
-=======
+		
+        NetworkServer.Spawn(gameObject);
+
 		if (block.BlockType != BlockType.Teleport)
 			NetworkServer.Spawn(gameObject);
 
@@ -180,7 +180,6 @@ public class SchematicObject : MonoBehaviour
 		{
 			gameObject.transform.SetParent(parentTransform);
 		}
->>>>>>> Stashed changes
 
 		// _attachedBlocks.Add(gameObject);
 		ObjectFromId.Add(block.ObjectId, gameObject.transform);

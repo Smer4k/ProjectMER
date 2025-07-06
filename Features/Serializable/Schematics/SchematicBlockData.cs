@@ -1,5 +1,5 @@
 using AdminToys;
-using GameCore;
+using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using LabApi.Features.Wrappers;
 using MapGeneration;
@@ -43,12 +43,9 @@ public class SchematicBlockData
 			BlockType.Light => CreateLight(),
 			BlockType.Pickup => CreatePickup(schematicObject),
 			BlockType.Workstation => CreateWorkstation(),
-<<<<<<< Updated upstream
-=======
 			BlockType.Teleport => CreateTeleport(parentTransform),
 			BlockType.Door => CreateDoor(),
 			BlockType.Interactable => CreateInteractable(),
->>>>>>> Stashed changes
 			_ => CreateEmpty(true)
 		};
 
@@ -58,9 +55,7 @@ public class SchematicBlockData
 		transform.SetParent(parentTransform);
 		transform.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
 		transform.localScale = BlockType == BlockType.Empty && Scale == Vector3.zero ? Vector3.one : Scale;
-
-<<<<<<< Updated upstream
-=======
+		
 		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
 		if (BlockType == BlockType.Door)
 		{
@@ -70,7 +65,6 @@ public class SchematicBlockData
 		if (BlockType == BlockType.Teleport)
 			transform.position += Vector3.up;
 		
->>>>>>> Stashed changes
 		return gameObject;
 	}
 
@@ -158,8 +152,6 @@ public class SchematicBlockData
 
 		return workstation.gameObject;
 	}
-<<<<<<< Updated upstream
-=======
 
 	private GameObject CreateTeleport(Transform parentTransform)
 	{
@@ -240,5 +232,4 @@ public class SchematicBlockData
 
 		return interactableToy.gameObject;
 	}
->>>>>>> Stashed changes
 }
