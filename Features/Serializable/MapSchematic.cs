@@ -60,11 +60,11 @@ public class MapSchematic
 		PlayerSpawnpoints.AddRange(other.PlayerSpawnpoints);
 		Capybaras.AddRange(other.Capybaras);
 		Texts.AddRange(other.Texts);
-		Schematics.AddRange(other.Schematics);
 		Scp079Cameras.AddRange(other.Scp079Cameras);
 		ShootingTargets.AddRange(other.ShootingTargets);
 		Teleports.AddRange(other.Teleports);
 		Lockers.AddRange(other.Lockers);
+		Schematics.AddRange(other.Schematics);
 
 		return this;
 	}
@@ -94,7 +94,6 @@ public class MapSchematic
 		PlayerSpawnpoints.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Capybaras.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Texts.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
-		Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Scp079Cameras.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		ShootingTargets.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Teleports.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
@@ -103,6 +102,7 @@ public class MapSchematic
 			kVP.Value._prevType = kVP.Value.LockerType;
 			SpawnObject(kVP.Key, kVP.Value);
 		});
+		Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 	}
 
 	public void SpawnObject<T>(string id, T serializableObject) where T : SerializableObject

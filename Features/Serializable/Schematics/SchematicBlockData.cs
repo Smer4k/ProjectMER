@@ -2,12 +2,10 @@ using AdminToys;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using LabApi.Features.Wrappers;
-using MapGeneration;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
-using ProjectMER.Features.ToolGun;
 using UnityEngine;
 using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -36,6 +34,25 @@ public class SchematicBlockData
 
 	public GameObject Create(SchematicObject schematicObject, Transform parentTransform)
 	{
+		if (BlockType is BlockType.Door or BlockType.Teleport)
+		{
+			var mapObjs = GameObject.FindObjectsByType<MapEditorObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+			foreach (var mapObj in mapObjs)
+			{
+				if (mapObj == null || mapObj.MapName == null) continue;
+				if (!MapUtils.LoadedMaps.TryGetValue(mapObj.MapName, out _) && mapObj.Id == Name)
+				{
+					GameObject obj = CreateEmpty();
+					obj.name = Name;
+					Transform trans = obj.transform;
+					trans.SetParent(parentTransform);
+					trans.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
+					trans.localScale = BlockType == BlockType.Empty && Scale == Vector3.zero ? Vector3.one : Scale;
+					return obj;
+				}
+			}
+		}
+		
 		GameObject gameObject = BlockType switch
 		{
 			BlockType.Empty => CreateEmpty(),
@@ -48,7 +65,7 @@ public class SchematicBlockData
 			BlockType.Interactable => CreateInteractable(),
 			_ => CreateEmpty(true)
 		};
-
+		
 		gameObject.name = Name;
 
 		Transform transform = gameObject.transform;
@@ -165,39 +182,6 @@ public class SchematicBlockData
 		}
 		teleport.Id = Name;
 		return gameObject;
-		
-		var position = parentTransform.position + Position;
-		Room room = RoomExtensions.GetRoomAtPosition(position);
-
-		position = room.Name == RoomName.Outside ? position : room.Transform.InverseTransformPoint(position);
-		string roomId = room.GetRoomStringId();
-
-		MapSchematic map = MapUtils.UntitledMap;
-
-		SerializableTeleport serializableTeleport = (SerializableTeleport)Activator.CreateInstance(ToolGunItem.TypesDictionary[ToolGunObjectType.Teleport]);
-		serializableTeleport.Room = roomId;
-		serializableTeleport.Index = room.GetRoomIndex();
-		serializableTeleport.Position = position + Vector3.up;
-		serializableTeleport.Scale = Scale == Vector3.zero ? Vector3.one : Scale;
-		serializableTeleport.Rotation = Rotation;
-		if (Properties.TryGetValue("Targets", out var targetsObj))
-		{
-			foreach (var target in (List<object>)targetsObj)
-			{
-				serializableTeleport.Targets.Add(Convert.ToString(target));
-			}
-		}
-		map.SpawnObject(Name, serializableTeleport);
-
-		foreach (MapEditorObject mapEditorObject in map.SpawnedObjects)
-		{
-			if (mapEditorObject.Id != Name)
-				continue;
-
-			IndicatorObject.TrySpawnOrUpdateIndicator(mapEditorObject);
-		}
-
-		return map.SpawnedObjects.Last().gameObject;
 	}
 	
 	private GameObject CreateDoor()
