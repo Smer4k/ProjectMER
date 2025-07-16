@@ -169,8 +169,9 @@ public class SchematicObject : MonoBehaviour
 			return null;
 
 		GameObject gameObject = block.Create(this, parentTransform);
-		
-        NetworkServer.Spawn(gameObject);
+
+		if (block.BlockType == BlockType.Camera)
+			gameObject.GetComponent<Scp079CameraToy>()?.SetRoom(null, null);
 
 		if (block.BlockType != BlockType.Teleport)
 			NetworkServer.Spawn(gameObject);

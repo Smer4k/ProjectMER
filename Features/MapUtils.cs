@@ -2,15 +2,18 @@ using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
+using PlayerRoles;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
+using ProjectMER.Features.Serializable.Lockers;
 using ProjectMER.Features.Serializable.Schematics;
 using ProjectMER.Features.ToolGun;
 using UnityEngine;
 using Utf8Json;
 using YamlDotNet.Core;
+using CameraType = ProjectMER.Features.Enums.CameraType;
 
 namespace ProjectMER.Features;
 
@@ -33,23 +36,26 @@ public static class MapUtils
 			if (schematic.Data == null) continue;
 			foreach (var block in schematic.Data.Blocks.ToArray())
 			{
-				if (block.BlockType is not BlockType.Door and not BlockType.Teleport) continue;
+				if (block.BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup) continue;
 				var position = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId].position;
 				Room room = RoomExtensions.GetRoomAtPosition(position);
 
 				position = room.Name == RoomName.Outside ? position : room.Transform.InverseTransformPoint(position);
 				string roomId = room.GetRoomStringId();
 
-				ToolGunObjectType type = ToolGunObjectType.Capybara;
-				switch (block.BlockType)
+				ToolGunObjectType type = block.BlockType switch
 				{
-					case BlockType.Teleport:
-						type = ToolGunObjectType.Teleport;
-						break;
-					case BlockType.Door:
-						type = ToolGunObjectType.Door;
-						break;
-				}
+					BlockType.Teleport => ToolGunObjectType.Teleport,
+					BlockType.Door => ToolGunObjectType.Door,
+					BlockType.Locker => ToolGunObjectType.Locker,
+					BlockType.Workstation => ToolGunObjectType.Workstation,
+					BlockType.Text => ToolGunObjectType.Text,
+					BlockType.Camera => ToolGunObjectType.Scp079Camera,
+					BlockType.ShootingTarget => ToolGunObjectType.ShootingTarget,
+					BlockType.PlayerSpawnPoint => ToolGunObjectType.PlayerSpawnpoint,
+					BlockType.Capybara => ToolGunObjectType.Capybara,
+					_ => throw new ArgumentOutOfRangeException()
+				};
 
 				SerializableObject serializableObject =
 					(SerializableObject)Activator.CreateInstance(ToolGunItem.TypesDictionary[type]);
@@ -82,6 +88,43 @@ public static class MapUtils
 						serializableDoor.RequiredPermissions =
 							(DoorPermissionFlags)Convert.ToUInt16(block.Properties["RequiredPermissions"]);
 						serializableDoor.RequireAll = Convert.ToBoolean(block.Properties["RequireAll"]);
+						break;
+					case SerializableWorkstation serializableWorkstation:
+						serializableWorkstation.IsInteractable = Convert.ToBoolean(block.Properties["IsInteractable"]);
+						break;
+					case SerializableLocker serializableLocker:
+						List<SerializableLockerChamber> convertedChambers = new(((List<object>)block.Properties["Chambers"]).Count);
+						foreach (var json in (List<object>)block.Properties["Chambers"])
+						{
+							var chamber = Convert.ToString(json);
+							convertedChambers.Add(JsonSerializer.Deserialize<SerializableLockerChamber>(chamber));
+						}
+		
+						List<SerializableLockerLoot> convertedLoot = new(((List<object>)block.Properties["Loot"]).Count);
+						foreach (var json in (List<object>)block.Properties["Loot"])
+						{
+							var loot = Convert.ToString(json);
+							convertedLoot.Add(JsonSerializer.Deserialize<SerializableLockerLoot>(loot));
+						}
+						serializableLocker.Loot = convertedLoot;
+						serializableLocker.Chambers = convertedChambers;
+						serializableLocker.LockerType = (LockerType)Convert.ToInt32(block.Properties["LockerType"]);
+						break;
+					case SerializableText serializableText:
+						serializableText.Text = Convert.ToString(block.Properties["Text"]);
+						break;
+					case SerializableScp079Camera serializableScp079Camera:
+						serializableScp079Camera.CameraType = (CameraType)Convert.ToInt32(block.Properties["CameraType"]);
+						serializableScp079Camera.Label = Convert.ToString(block.Properties["Label"]);
+						break;
+					case SerializableShootingTarget serializableShootingTarget:
+						serializableShootingTarget.TargetType = (TargetType)Convert.ToInt32(block.Properties["TargetType"]);
+						break;
+					case SerializablePlayerSpawnpoint serializablePlayerSpawnpoint:
+						foreach (var role in (List<object>)block.Properties["Roles"])
+						{
+							serializablePlayerSpawnpoint.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+						}
 						break;
 				}
 

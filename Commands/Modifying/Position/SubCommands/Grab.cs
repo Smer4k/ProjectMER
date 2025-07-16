@@ -5,6 +5,7 @@ using MEC;
 using Mirror;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
+using ProjectMER.Features.Serializable.Schematics;
 using ProjectMER.Features.ToolGun;
 using UnityEngine;
 
@@ -85,6 +86,11 @@ public class Grab : ICommand
 			{
 				NetworkServer.UnSpawn(mapEditorObject.gameObject);
 				NetworkServer.Spawn(mapEditorObject.gameObject);
+			}
+
+			if (mapEditorObject.Base is SerializableSchematic schematic)
+			{
+				schematic.UpdatePositionCustomObjects(mapEditorObject.gameObject);
 			}
 		}
 

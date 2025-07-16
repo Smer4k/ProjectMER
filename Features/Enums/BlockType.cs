@@ -51,7 +51,32 @@ public enum BlockType
 	Door = 8,
 	
 	/// <summary>
-	/// Represents a Interactable.
+	/// Represents a interactable.
 	/// </summary>
 	Interactable = 9,
+	
+	/// <summary>
+	/// Represents a text.
+	/// </summary>
+	Text = 10,
+	
+	/// <summary>
+	/// Represents a camera.
+	/// </summary>
+	Camera = 11,
+	
+	/// <summary>
+	/// Represents a shooting target.
+	/// </summary>
+	ShootingTarget = 12,
+	
+	/// <summary>
+	/// Represents a player spawn point.
+	/// </summary>
+	PlayerSpawnPoint = 13,
+	
+	/// <summary>
+	/// Represents a capybara.
+	/// </summary>
+	Capybara = 14,
 }

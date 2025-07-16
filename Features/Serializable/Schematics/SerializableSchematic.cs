@@ -1,6 +1,10 @@
 using AdminToys;
 using LabApi.Features.Wrappers;
+using MapGeneration.Distributors;
+using MEC;
 using Mirror;
+using ProjectMER.Events.Handlers;
+using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using UnityEngine;
@@ -29,6 +33,8 @@ public class SerializableSchematic : SerializableObject
 		schematic.transform.SetPositionAndRotation(position, rotation);
 		schematic.transform.localScale = Scale;
 
+		UpdatePositionCustomObjects(schematic);
+		
 		if (instance == null)
 		{
 			NetworkServer.Spawn(schematic.gameObject);
@@ -37,6 +43,31 @@ public class SerializableSchematic : SerializableObject
 
 		return schematic.gameObject;
 	}
+
+	public void UpdatePositionCustomObjects(GameObject instance)
+	{
+		if (Data == null)
+			return;
+
+		if (!instance.TryGetComponent(out SchematicObject schematicObject)) 
+			return;
+		
+		foreach (var block in Data.Blocks)
+		{
+			if (block.BlockType is not BlockType.Workstation and not BlockType.Locker) continue;
+			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
+			if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))
+			{
+				structurePositionSync.Network_position = gameObject.transform.position;
+				structurePositionSync.Network_rotationY =
+					(sbyte)Mathf.RoundToInt(gameObject.transform.rotation.eulerAngles.y / 5.625f);
+			}
+			NetworkServer.UnSpawn(gameObject);
+			NetworkServer.Spawn(gameObject);
+		}
+	}
+	
+	public void UpdatePositionCustomObjects(PrimitiveObjectToy instance) => UpdatePositionCustomObjects(instance.gameObject);
 
 	public SchematicObjectDataList? Data => _data ??= MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList data) ? data : null;
 	private SchematicObjectDataList? _data;
