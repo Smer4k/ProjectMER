@@ -33,10 +33,10 @@ public static class MapUtils
 		foreach (var mapObject in UntitledMap.SpawnedObjects.ToArray())
 		{
 			if (mapObject.Base is not SerializableSchematic schematic) continue;
-			if (schematic.Data == null) continue;
-			foreach (var block in schematic.Data.Blocks.ToArray())
+			if (!TryGetSchematicDataByName(schematic.SchematicName, out var data)) continue;
+			foreach (var block in data.Blocks.ToArray())
 			{
-				if (block.BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup) continue;
+				if (block.BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text) continue;
 				var position = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId].position;
 				Room room = RoomExtensions.GetRoomAtPosition(position);
 
@@ -49,7 +49,6 @@ public static class MapUtils
 					BlockType.Door => ToolGunObjectType.Door,
 					BlockType.Locker => ToolGunObjectType.Locker,
 					BlockType.Workstation => ToolGunObjectType.Workstation,
-					BlockType.Text => ToolGunObjectType.Text,
 					BlockType.Camera => ToolGunObjectType.Scp079Camera,
 					BlockType.ShootingTarget => ToolGunObjectType.ShootingTarget,
 					BlockType.PlayerSpawnPoint => ToolGunObjectType.PlayerSpawnpoint,
@@ -109,9 +108,6 @@ public static class MapUtils
 						serializableLocker.Loot = convertedLoot;
 						serializableLocker.Chambers = convertedChambers;
 						serializableLocker.LockerType = (LockerType)Convert.ToInt32(block.Properties["LockerType"]);
-						break;
-					case SerializableText serializableText:
-						serializableText.Text = Convert.ToString(block.Properties["Text"]);
 						break;
 					case SerializableScp079Camera serializableScp079Camera:
 						serializableScp079Camera.CameraType = (CameraType)Convert.ToInt32(block.Properties["CameraType"]);

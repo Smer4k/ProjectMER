@@ -1,8 +1,10 @@
 using AdminToys;
+using LabApi.Events.CustomHandlers;
 using LabApi.Features.Wrappers;
 using MapGeneration.Distributors;
 using MEC;
 using Mirror;
+using PlayerRoles.FirstPersonControl.NetworkMessages;
 using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Enums;
 using ProjectMER.Events.Arguments;
@@ -62,13 +64,14 @@ public class SerializableSchematic : SerializableObject
 
 	public void UpdatePositionCustomObjects(GameObject instance)
 	{
-		if (Data == null)
+		
+		if (!MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList data))
 			return;
 
 		if (!instance.TryGetComponent(out SchematicObject schematicObject)) 
 			return;
 		
-		foreach (var block in Data.Blocks)
+		foreach (var block in data.Blocks)
 		{
 			if (block.BlockType is not BlockType.Workstation and not BlockType.Locker) continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;

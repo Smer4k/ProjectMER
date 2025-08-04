@@ -385,7 +385,7 @@ public class SchematicBlockData
 	private GameObject CreateCapybara()
 	{
 		CapybaraToy capybaraToy = GameObject.Instantiate(PrefabManager.Capybara);
-		capybaraToy.Network_collisionsEnabled = true;
+		capybaraToy.CollisionsEnabled = true;
 		return capybaraToy.gameObject;
 	}
 
