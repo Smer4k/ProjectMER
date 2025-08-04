@@ -44,39 +44,12 @@ public enum BlockType
 	/// Represents a locker.
 	/// </summary>
 	Locker = 7,
-
-	/// <summary>
-	/// Represents a door.
-	/// </summary>
-	Door = 8,
-	
-	/// <summary>
-	/// Represents a interactable.
-	/// </summary>
+	Text = 8,
 	Interactable = 9,
-	
-	/// <summary>
-	/// Represents a text.
-	/// </summary>
-	Text = 10,
-	
-	/// <summary>
-	/// Represents a camera.
-	/// </summary>
-	Camera = 11,
-	
-	/// <summary>
-	/// Represents a shooting target.
-	/// </summary>
-	ShootingTarget = 12,
-	
-	/// <summary>
-	/// Represents a player spawn point.
-	/// </summary>
-	PlayerSpawnPoint = 13,
-	
-	/// <summary>
-	/// Represents a capybara.
-	/// </summary>
-	Capybara = 14,
+	Waypoint = 10,
+	Door = 30, // when merging replace with normal serial number
+	Camera = 31,
+	ShootingTarget = 32,
+	PlayerSpawnPoint = 33,
+	Capybara = 34,
 }

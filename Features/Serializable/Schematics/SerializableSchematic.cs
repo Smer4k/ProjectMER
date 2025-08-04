@@ -5,6 +5,7 @@ using MEC;
 using Mirror;
 using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Enums;
+using ProjectMER.Events.Arguments;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
 using UnityEngine;
@@ -18,9 +19,6 @@ public class SerializableSchematic : SerializableObject
 
 	public override GameObject? SpawnOrUpdateObject(Room? room = null, GameObject? instance = null)
 	{
-		if (Data == null)
-			return null;
-
 		PrimitiveObjectToy schematic = instance == null ? UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject) : instance.GetComponent<PrimitiveObjectToy>();
 		schematic.NetworkPrimitiveFlags = PrimitiveFlags.None;
 		schematic.NetworkMovementSmoothing = 60;
@@ -37,8 +35,26 @@ public class SerializableSchematic : SerializableObject
 		
 		if (instance == null)
 		{
+			_ = MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList? data) ? data : null;
+
+			if (data == null)
+			{
+				GameObject.Destroy(schematic.gameObject);
+				return null;
+			}
+
+			SchematicSpawningEventArgs ev = new(data, SchematicName);
+			Schematic.OnSchematicSpawning(ev);
+			data = ev.Data;
+
+			if (!ev.IsAllowed)
+			{
+				GameObject.Destroy(schematic.gameObject);
+				return null;
+			}
+			
 			NetworkServer.Spawn(schematic.gameObject);
-			schematic.gameObject.AddComponent<SchematicObject>().Init(Data);
+			schematic.gameObject.AddComponent<SchematicObject>().Init(data);
 		}
 
 		return schematic.gameObject;
@@ -68,7 +84,4 @@ public class SerializableSchematic : SerializableObject
 	}
 	
 	public void UpdatePositionCustomObjects(PrimitiveObjectToy instance) => UpdatePositionCustomObjects(instance.gameObject);
-
-	public SchematicObjectDataList? Data => _data ??= MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList data) ? data : null;
-	private SchematicObjectDataList? _data;
 }
