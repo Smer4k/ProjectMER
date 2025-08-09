@@ -101,6 +101,10 @@ public class MapSchematic
 		Capybaras.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Texts.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Interactables.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
+		
+		if (!ProjectMER.Singleton.Config!.BackwardСompatibility)
+			Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
+		
 		Scp079Cameras.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		ShootingTargets.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		Teleports.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
@@ -110,7 +114,9 @@ public class MapSchematic
 			SpawnObject(kVP.Key, kVP.Value);
 		});
 		Waypoints.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
-		Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
+		
+		if (ProjectMER.Singleton.Config.BackwardСompatibility)
+			Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 	}
 
 	public void SpawnObject<T>(string id, T serializableObject) where T : SerializableObject

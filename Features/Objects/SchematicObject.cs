@@ -173,12 +173,6 @@ public class SchematicObject : MonoBehaviour
 		if (block.BlockType != BlockType.Teleport)
 			NetworkServer.Spawn(gameObject);
 
-		// We return the parent for the door so that when deleting the schematic, the door is deleted
-		if (block.BlockType == BlockType.Door)
-		{
-			gameObject.transform.SetParent(parentTransform);
-		}
-
 		ObjectFromId.Add(block.ObjectId, gameObject.transform);
 
 		if (block.BlockType != BlockType.Light && TryGetAnimatorController(block.AnimatorName, out RuntimeAnimatorController animatorController))
@@ -260,6 +254,13 @@ public class SchematicObject : MonoBehaviour
 	private void OnDestroy()
 	{
 		AnimationController.Dictionary.Remove(this);
+		foreach (var obj in ObjectFromId.Values)
+		{
+			if (obj == null)
+				continue;
+			if (obj.parent == null)
+				NetworkServer.Destroy(obj.gameObject);
+		}
 		NetworkServer.Destroy(gameObject);
 		Schematic.OnSchematicDestroyed(new(this, Name));
 	}

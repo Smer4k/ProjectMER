@@ -49,9 +49,9 @@ public class SchematicBlockData
 	public GameObject Create(SchematicObject schematicObject, Transform parentTransform)
 	{
 		var commonBlock = BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable
-			or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup;
+			or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text;
 
-		if (!commonBlock)
+		if (!commonBlock && ProjectMER.Singleton.Config!.BackwardСompatibility)
 		{
 			var mapObjs =
 				GameObject.FindObjectsByType<MapEditorObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
@@ -110,7 +110,6 @@ public class SchematicBlockData
 			transform.SetParent(null);
 		}
 		
-
 		if (gameObject.TryGetComponent(out AdminToyBase adminToyBase))
 		{
 			if (Properties != null && Properties.TryGetValue("Static", out object isStatic) && Convert.ToBoolean(isStatic))
@@ -121,12 +120,6 @@ public class SchematicBlockData
 			{
 				adminToyBase.NetworkMovementSmoothing = 60;
 			}
-		}
-
-		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
-		if (BlockType == BlockType.Door)
-		{
-			transform.SetParent(null);
 		}
 
 		if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))

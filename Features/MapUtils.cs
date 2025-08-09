@@ -32,15 +32,17 @@ public static class MapUtils
 		
 		foreach (var mapObject in UntitledMap.SpawnedObjects.ToArray())
 		{
+			if (!ProjectMER.Singleton.Config!.BackwardСompatibility) break;
+			
 			if (mapObject.Base is not SerializableSchematic schematic) continue;
 			if (!TryGetSchematicDataByName(schematic.SchematicName, out var data)) continue;
 			foreach (var block in data.Blocks.ToArray())
 			{
 				if (block.BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text) continue;
-				var position = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId].position;
-				Room room = RoomExtensions.GetRoomAtPosition(position);
+				var transform = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId];
+				Room room = RoomExtensions.GetRoomAtPosition(transform.position);
 
-				position = room.Name == RoomName.Outside ? position : room.Transform.InverseTransformPoint(position);
+				var position = room.Name == RoomName.Outside ? transform.position : room.Transform.InverseTransformPoint(transform.position);
 				string roomId = room.GetRoomStringId();
 
 				ToolGunObjectType type = block.BlockType switch
@@ -62,7 +64,7 @@ public static class MapUtils
 				serializableObject.Index = room.GetRoomIndex();
 				serializableObject.Position = position;
 				serializableObject.Scale = block.Scale == Vector3.zero ? Vector3.one : block.Scale;
-				serializableObject.Rotation = block.Rotation;
+				serializableObject.Rotation = transform.eulerAngles;
 
 				var id = block.Name;
 				

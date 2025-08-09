@@ -10,6 +10,9 @@ public class Config
 	[Description("Whether the object will be auto selected when spawning it.")]
 	public bool AutoSelect { get; set; } = true;
 
+	[Description("Enable/disable backward compatibility with the official version of MER (custom objects are converted to ToolGun objects when saving the map)")]
+	public bool BackwardСompatibility { get; set; } = false;
+
 	[Description(
 	"\n" +
 	"# ------------------------------Actions on event------------------------------\n" +
