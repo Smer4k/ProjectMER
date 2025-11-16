@@ -5,7 +5,7 @@ namespace ProjectMER.Features.Objects;
 
 public class SchematicTeleportObject : MonoBehaviour
 {
-	public DateTime NextTimeUse;
+    private readonly Dictionary<Player, DateTime> _nextUsePerPlayer = new();
 	public string Id { get; set; }
 	public float Cooldown { get; set; } = 5f;
 	public List<string> Targets { get; set; } = [];
@@ -33,16 +33,20 @@ public class SchematicTeleportObject : MonoBehaviour
 		if (player is null)
 			return;
 		
-		if (NextTimeUse > DateTime.Now)
+		if (_nextUsePerPlayer.TryGetValue(player, out DateTime nextUse) && nextUse > DateTime.Now)
 			return;
 		
 		SchematicTeleportObject? target = GetRandomTarget();
 		if (target == null)
 			return;
 		
-		DateTime dateTime = DateTime.Now.AddSeconds(Cooldown);
-		NextTimeUse = dateTime;
-		target.NextTimeUse = dateTime;
+        DateTime newCooldown = DateTime.Now.AddSeconds(Cooldown);
+        _nextUsePerPlayer[player] = newCooldown;
+
+        if (!target._nextUsePerPlayer.ContainsKey(player))
+            target._nextUsePerPlayer[player] = newCooldown;
+        else
+            target._nextUsePerPlayer[player] = newCooldown;
 
 		player.Position = target.gameObject.transform.position;
 		player.LookRotation = target.gameObject.transform.eulerAngles;
