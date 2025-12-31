@@ -14,7 +14,6 @@ public static class PrefabManager
 	public static PrimitiveObjectToy PrimitiveObject { get; private set; }
 
 	public static LightSourceToy LightSource { get; private set; }
-	public static InvisibleInteractableToy InvisibleInteractableToy { get; private set; }
 	public static DoorVariant DoorLcz { get; private set; }
 	public static DoorVariant DoorHcz { get; private set; }
 	public static DoorVariant DoorEz { get; private set; }
@@ -75,12 +74,6 @@ public static class PrefabManager
 				continue;
 			}
 			
-			if (gameObject.TryGetComponent(out InvisibleInteractableToy invisibleInteractableToy))
-			{
-				InvisibleInteractableToy = invisibleInteractableToy;
-				continue;
-			}
-
 			if (gameObject.TryGetComponent(out DoorVariant doorVariant))
 			{
 				switch (gameObject.name)
