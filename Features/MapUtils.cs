@@ -38,7 +38,17 @@ public static class MapUtils
 			if (!TryGetSchematicDataByName(schematic.SchematicName, out var data)) continue;
 			foreach (var block in data.Blocks.ToArray())
 			{
-				if (block.BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text) continue;
+				if (block.BlockType is 
+				    BlockType.Light or 
+				    BlockType.Empty or 
+				    BlockType.Interactable or 
+				    BlockType.Primitive or 
+				    BlockType.Schematic or 
+				    BlockType.Pickup or 
+				    BlockType.Waypoint or 
+				    BlockType.Text or 
+				    BlockType.Workstation) 
+					continue;
 				var transform = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId];
 				Room room = RoomExtensions.GetRoomAtPosition(transform.position);
 
