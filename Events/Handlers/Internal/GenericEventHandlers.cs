@@ -5,6 +5,7 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.ToolGun;
+using UnityEngine;
 
 namespace ProjectMER.Events.Handlers.Internal;
 
@@ -26,7 +27,7 @@ public class GenericEventsHandler : CustomEventsHandler
 		if (!ev.UseSpawnPoint)
 			return;
 
-		List<MapEditorObject> list = [];
+		List<MonoBehaviour> list = [];
 		foreach (MapSchematic map in MapUtils.LoadedMaps.Values)
 		{
 			foreach (KeyValuePair<string, SerializablePlayerSpawnpoint> spawnpoint in map.PlayerSpawnpoints)
@@ -38,10 +39,17 @@ public class GenericEventsHandler : CustomEventsHandler
 			}
 		}
 
+		foreach (var spawnpoint in SchematicPlayerSpawnpointObject.SpawnpointObjects)
+		{
+			if (!spawnpoint.Roles.Contains(ev.Role.RoleTypeId))
+				continue;
+			list.Add(spawnpoint);
+		}
+
 		if (list.Count == 0)
 			return;
 
-		MapEditorObject randomElement = list[UnityEngine.Random.Range(0, list.Count)];
+		MonoBehaviour randomElement = list[UnityEngine.Random.Range(0, list.Count)];
 
 		ev.SpawnLocation = randomElement.transform.position;
 		Timing.CallDelayed(0.05f, () =>

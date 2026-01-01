@@ -7,6 +7,7 @@ using LabApi.Features.Wrappers;
 using MapGeneration.Distributors;
 using MEC;
 using Mirror;
+using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
@@ -86,7 +87,7 @@ public class SchematicBlockData
 			BlockType.Door => CreateDoor(),
 			BlockType.Camera => CreateCamera(),
 			BlockType.ShootingTarget => CreateShootingTarget(),
-			BlockType.PlayerSpawnPoint => CreatePlayerSpawnPoint(),
+			BlockType.PlayerSpawnPoint => CreatePlayerSpawnPoint(schematicObject, parentTransform),
 			BlockType.Capybara => CreateCapybara(),
 			_ => CreateEmpty(true)
 		};
@@ -377,9 +378,15 @@ public class SchematicBlockData
 		return shootingTarget.gameObject;
 	}
 
-	private GameObject CreatePlayerSpawnPoint()
+	private GameObject CreatePlayerSpawnPoint(SchematicObject schematicObject,Transform parent)
 	{
-		return CreateEmpty();
+		var spawn = new GameObject("PlayerSpawnpoint");
+		var component = spawn.AddComponent<SchematicPlayerSpawnpointObject>();
+		foreach (var role in (List<object>)Properties["Roles"])
+		{
+			component.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+		}
+		return spawn;
 	}
 
 	private GameObject CreateCapybara()

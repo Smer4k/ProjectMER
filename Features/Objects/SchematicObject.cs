@@ -170,7 +170,7 @@ public class SchematicObject : MonoBehaviour
 		if (block.BlockType == BlockType.Camera)
 			gameObject.GetComponent<Scp079CameraToy>()?.SetRoom(null, null);
 
-		if (block.BlockType != BlockType.Teleport)
+		if (block.BlockType != BlockType.Teleport && block.BlockType != BlockType.PlayerSpawnPoint)
 			NetworkServer.Spawn(gameObject);
 
 		ObjectFromId.Add(block.ObjectId, gameObject.transform);
