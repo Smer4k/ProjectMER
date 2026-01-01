@@ -1,15 +1,13 @@
 using AdminToys;
-using LabApi.Events.CustomHandlers;
 using LabApi.Features.Wrappers;
 using MapGeneration.Distributors;
-using MEC;
 using Mirror;
-using PlayerRoles.FirstPersonControl.NetworkMessages;
 using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Enums;
 using ProjectMER.Events.Arguments;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
+using RelativePositioning;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
@@ -73,8 +71,26 @@ public class SerializableSchematic : SerializableObject
 		
 		foreach (var block in data.Blocks)
 		{
-			if (block.BlockType is not BlockType.Workstation and not BlockType.Locker) continue;
+			if (block.BlockType is not 
+			    BlockType.Workstation and not 
+			    BlockType.Locker and not
+			    BlockType.Door) 
+				continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
+			
+			if (block.BlockType == BlockType.Door)
+			{
+				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
+				gameObject.transform.SetParent(parent.transform);
+				gameObject.transform.localPosition = block.Position;
+				gameObject.transform.SetParent(null);
+				if (gameObject.TryGetComponent(out NetIdWaypoint waypointBase))
+				{
+					waypointBase.SetPosition();
+					NetIdWaypoint._refreshNextFrame = true;
+				}
+			}
+
 			if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))
 			{
 				structurePositionSync.Network_position = gameObject.transform.position;

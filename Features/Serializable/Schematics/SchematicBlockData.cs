@@ -97,12 +97,14 @@ public class SchematicBlockData
 		transform.SetParent(parentTransform);
 		transform.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
 
-		transform.localScale = BlockType switch
+		if (BlockType != BlockType.Waypoint)
 		{
-			BlockType.Empty when Scale == Vector3.zero => Vector3.one,
-			BlockType.Waypoint => Scale * SerializableWaypoint.ScaleMultiplier,
-			_ => Scale,
-		};
+			transform.localScale = BlockType switch
+			{
+				BlockType.Empty when Scale == Vector3.zero => Vector3.one,
+				_ => Scale,
+			};
+		}
 
 		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
 		if (BlockType == BlockType.Door)
@@ -119,6 +121,11 @@ public class SchematicBlockData
 			else
 			{
 				adminToyBase.NetworkMovementSmoothing = 60;
+			}
+
+			if (adminToyBase is WaypointToy waypointToy)
+			{
+				waypointToy.BoundsSize = Scale;
 			}
 		}
 
@@ -405,8 +412,6 @@ public class SchematicBlockData
 	private GameObject CreateWaypoint()
 	{
 		WaypointToy waypoint = GameObject.Instantiate(PrefabManager.Waypoint);
-		waypoint.NetworkPriority = byte.MaxValue;
-
 		return waypoint.gameObject;
 	}
 }
