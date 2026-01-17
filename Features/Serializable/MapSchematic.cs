@@ -51,6 +51,9 @@ public class MapSchematic
 	public Dictionary<string, SerializableLocker> Lockers { get; set; } = [];
 
 	public Dictionary<string, SerializableWaypoint> Waypoints { get; set; } = [];
+	
+	public Dictionary<string, SerializablePlayerBlocker> PlayerBlockers { get; set; } = [];
+
 
 	public List<MapEditorObject> SpawnedObjects = [];
 
@@ -70,6 +73,7 @@ public class MapSchematic
 		Teleports.AddRange(other.Teleports);
 		Lockers.AddRange(other.Lockers);
 		Waypoints.AddRange(other.Waypoints);
+		PlayerBlockers.AddRange(other.PlayerBlockers);
 		Schematics.AddRange(other.Schematics);
 
 		return this;
@@ -114,6 +118,7 @@ public class MapSchematic
 			SpawnObject(kVP.Key, kVP.Value);
 		});
 		Waypoints.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
+		PlayerBlockers.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
 		
 		if (ProjectMER.Singleton.Config.BackwardСompatibility)
 			Schematics.ForEach(kVP => SpawnObject(kVP.Key, kVP.Value));
@@ -200,6 +205,9 @@ public class MapSchematic
 		if (Waypoints.TryAdd(id, serializableObject))
 			return true;
 
+		if (PlayerBlockers.TryAdd(id, serializableObject))
+			return true;
+
 		IsDirty = dirtyPrevValue;
 		return false;
 	}
@@ -252,6 +260,9 @@ public class MapSchematic
 			return true;
 
 		if (Waypoints.Remove(id))
+			return true;
+		
+		if (PlayerBlockers.Remove(id))
 			return true;
 
 		IsDirty = dirtyPrevValue;

@@ -43,7 +43,6 @@ public class SerializableDoor : SerializableObject
 		if (doorVariant.TryGetComponent(out NetIdWaypoint waypointBase))
 		{
 			waypointBase.SetPosition();
-			NetIdWaypoint._refreshNextFrame = true;
 		}
 
 		NetworkServer.UnSpawn(doorVariant.gameObject);

@@ -89,6 +89,7 @@ public class SchematicBlockData
 			BlockType.ShootingTarget => CreateShootingTarget(),
 			BlockType.PlayerSpawnPoint => CreatePlayerSpawnPoint(schematicObject, parentTransform),
 			BlockType.Capybara => CreateCapybara(),
+			BlockType.PlayerBlocker => CreatePlayerBlocker(),
 			_ => CreateEmpty(true)
 		};
 
@@ -420,5 +421,14 @@ public class SchematicBlockData
 	{
 		WaypointToy waypoint = GameObject.Instantiate(PrefabManager.Waypoint);
 		return waypoint.gameObject;
+	}
+
+	private GameObject CreatePlayerBlocker()
+	{
+		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
+		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		primitive.PrimitiveFlags = PrimitiveFlags.Collidable;
+		primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+		return primitive.gameObject;
 	}
 }

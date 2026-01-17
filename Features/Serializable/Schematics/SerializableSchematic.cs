@@ -60,7 +60,7 @@ public class SerializableSchematic : SerializableObject
 		return schematic.gameObject;
 	}
 
-	public void UpdatePositionCustomObjects(GameObject instance)
+	public void UpdatePositionCustomObjects(GameObject instance, bool updateDoors = true)
 	{
 		
 		if (!MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList data))
@@ -78,7 +78,7 @@ public class SerializableSchematic : SerializableObject
 				continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
 			
-			if (block.BlockType == BlockType.Door)
+			if (block.BlockType == BlockType.Door && updateDoors)
 			{
 				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
 				gameObject.transform.SetParent(parent.transform);
@@ -87,7 +87,6 @@ public class SerializableSchematic : SerializableObject
 				if (gameObject.TryGetComponent(out NetIdWaypoint waypointBase))
 				{
 					waypointBase.SetPosition();
-					NetIdWaypoint._refreshNextFrame = true;
 				}
 			}
 
@@ -97,6 +96,9 @@ public class SerializableSchematic : SerializableObject
 				structurePositionSync.Network_rotationY =
 					(sbyte)Mathf.RoundToInt(gameObject.transform.rotation.eulerAngles.y / 5.625f);
 			}
+			
+			if (block.BlockType == BlockType.Door && !updateDoors)
+				continue;
 			NetworkServer.UnSpawn(gameObject);
 			NetworkServer.Spawn(gameObject);
 		}

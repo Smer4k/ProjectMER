@@ -44,8 +44,6 @@ public class ProjectMER : Plugin<Config>
 	public override void Enable()
 	{
 		Singleton = this;
-		_harmony = new Harmony($"michal78900.mapEditorReborn-{DateTime.Now.Ticks}");
-		_harmony.PatchAll();
 
 		PluginDir = Path.Combine(PathManager.Configs.FullName, "ProjectMER");
 		MapsDir = Path.Combine(PluginDir, "Maps");
@@ -114,7 +112,6 @@ public class ProjectMER : Plugin<Config>
 	public override void Disable()
 	{
 		Singleton = null!;
-		_harmony.UnpatchAll();
 
 		CustomHandlersManager.UnregisterEventsHandler(GenericEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(ToolGunEventsHandler);

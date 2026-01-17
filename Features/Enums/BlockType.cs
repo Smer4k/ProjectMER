@@ -52,4 +52,5 @@ public enum BlockType
 	ShootingTarget = 32,
 	PlayerSpawnPoint = 33,
 	Capybara = 34,
+	PlayerBlocker = 35,
 }

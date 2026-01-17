@@ -7,6 +7,7 @@ using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Serializable.Schematics;
 using ProjectMER.Features.ToolGun;
+using RelativePositioning;
 using UnityEngine;
 
 namespace ProjectMER.Commands.Modifying.Position.SubCommands;
@@ -84,13 +85,17 @@ public class Grab : ICommand
 			mapEditorObject.transform.position = prevPos;
 			if (mapEditorObject.Base is SerializableDoor _)
 			{
+				if (mapEditorObject.TryGetComponent(out NetIdWaypoint waypointBase))
+				{
+					waypointBase.SetPosition();
+				}
 				NetworkServer.UnSpawn(mapEditorObject.gameObject);
 				NetworkServer.Spawn(mapEditorObject.gameObject);
 			}
 
 			if (mapEditorObject.Base is SerializableSchematic schematic)
 			{
-				schematic.UpdatePositionCustomObjects(mapEditorObject.gameObject);
+				schematic.UpdatePositionCustomObjects(mapEditorObject.gameObject, false);
 			}
 		}
 
