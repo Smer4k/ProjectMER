@@ -116,13 +116,18 @@ public class SchematicBlockData
 		
 		if (gameObject.TryGetComponent(out AdminToyBase adminToyBase))
 		{
-			if (Properties != null && Properties.TryGetValue("Static", out object isStatic) && Convert.ToBoolean(isStatic))
+			if (Properties != null)
 			{
-				adminToyBase.NetworkIsStatic = true;
-			}
-			else
-			{
-				adminToyBase.NetworkMovementSmoothing = 60;
+				if (Properties.TryGetValue("Static", out object isStatic) && Convert.ToBoolean(isStatic))
+				{
+					adminToyBase.NetworkIsStatic = true;
+				} else if (Properties.TryGetValue("MovementSmoothing", out object movementSmoothing))
+				{
+					adminToyBase.NetworkMovementSmoothing = Convert.ToByte(movementSmoothing);
+				} else
+				{
+					adminToyBase.NetworkMovementSmoothing = 60;
+				}
 			}
 
 			if (adminToyBase is WaypointToy waypointToy)
