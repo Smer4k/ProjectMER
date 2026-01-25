@@ -6,14 +6,16 @@ using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Enums;
 using ProjectMER.Events.Arguments;
 using ProjectMER.Features.Extensions;
+using ProjectMER.Features.Interfaces;
 using ProjectMER.Features.Objects;
 using RelativePositioning;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
+using SpawnableCullingParent = AdminToys.SpawnableCullingParent;
 
 namespace ProjectMER.Features.Serializable.Schematics;
 
-public class SerializableSchematic : SerializableObject
+public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 {
 	public string SchematicName { get; set; } = "None";
 
@@ -74,7 +76,8 @@ public class SerializableSchematic : SerializableObject
 			if (block.BlockType is not 
 			    BlockType.Workstation and not 
 			    BlockType.Locker and not
-			    BlockType.Door) 
+			    BlockType.Door and not 
+			    BlockType.CullingParent) 
 				continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
 			
@@ -96,8 +99,20 @@ public class SerializableSchematic : SerializableObject
 				structurePositionSync.Network_rotationY =
 					(sbyte)Mathf.RoundToInt(gameObject.transform.rotation.eulerAngles.y / 5.625f);
 			}
+
+			if (gameObject.TryGetComponent(out SpawnableCullingParent spawnableCullingParent))
+			{
+				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
+				gameObject.transform.SetParent(parent.transform);
+				gameObject.transform.localPosition = block.Position;
+				gameObject.transform.SetParent(null);
+				spawnableCullingParent.NetworkBoundsPosition = gameObject.transform.position;
+				spawnableCullingParent.NetworkBoundsSize = gameObject.transform.localScale;
+			}
 			
 			if (block.BlockType == BlockType.Door && !updateDoors)
+				continue;
+			if (block.BlockType == BlockType.CullingParent)
 				continue;
 			NetworkServer.UnSpawn(gameObject);
 			NetworkServer.Spawn(gameObject);
@@ -105,4 +120,30 @@ public class SerializableSchematic : SerializableObject
 	}
 	
 	public void UpdatePositionCustomObjects(PrimitiveObjectToy instance) => UpdatePositionCustomObjects(instance.gameObject);
+	
+	// This is necessary so that the schematic can be removed using a toolgun.
+	public GameObject SpawnOrUpdateIndicator(Room room, GameObject? instance = null)
+	{
+		PrimitiveObjectToy root;
+		Vector3 position = room.GetAbsolutePosition(Position);
+		Quaternion rotation = room.GetAbsoluteRotation(Rotation);
+
+		if (instance == null)
+		{
+			root = UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject);
+			root.NetworkPrimitiveFlags = PrimitiveFlags.Visible;
+			root.NetworkMaterialColor = new Color(2, 0, 0, 0.9f);
+			root.NetworkPrimitiveType = PrimitiveType.Cube;
+		}
+		else
+		{
+			root = instance.GetComponent<PrimitiveObjectToy>();
+		}
+		
+		root.transform.position = position;
+		root.transform.rotation = rotation;
+		root.transform.localScale = Scale;
+
+		return root.gameObject;
+	}
 }

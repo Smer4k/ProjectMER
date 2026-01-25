@@ -1,5 +1,4 @@
 using AdminToys;
-using GameCore;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Pickups;
@@ -22,6 +21,7 @@ using LabApiLocker = LabApi.Features.Wrappers.Locker;
 using LapApiLockerChamber = LabApi.Features.Wrappers.LockerChamber;
 using Locker = MapGeneration.Distributors.Locker;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
+using SpawnableCullingParent = AdminToys.SpawnableCullingParent;
 using TextToy = AdminToys.TextToy;
 using WaypointToy = AdminToys.WaypointToy;
 
@@ -90,6 +90,7 @@ public class SchematicBlockData
 			BlockType.PlayerSpawnPoint => CreatePlayerSpawnPoint(schematicObject, parentTransform),
 			BlockType.Capybara => CreateCapybara(),
 			BlockType.PlayerBlocker => CreatePlayerBlocker(),
+			BlockType.CullingParent => CreateCullingParent(),
 			_ => CreateEmpty(true)
 		};
 
@@ -98,7 +99,7 @@ public class SchematicBlockData
 		Transform transform = gameObject.transform;
 		transform.SetParent(parentTransform);
 		transform.SetLocalPositionAndRotation(Position, Quaternion.Euler(Rotation));
-
+		
 		if (BlockType != BlockType.Waypoint)
 		{
 			transform.localScale = BlockType switch
@@ -109,7 +110,7 @@ public class SchematicBlockData
 		}
 
 		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
-		if (BlockType == BlockType.Door)
+		if (BlockType == BlockType.Door || BlockType == BlockType.CullingParent)
 		{
 			transform.SetParent(null);
 		}
@@ -134,6 +135,12 @@ public class SchematicBlockData
 			{
 				waypointToy.BoundsSize = Scale;
 			}
+		}
+
+		if (gameObject.TryGetComponent(out SpawnableCullingParent cullingParent))
+		{
+			cullingParent.NetworkBoundsPosition = gameObject.transform.position;
+			cullingParent.NetworkBoundsSize = Scale;
 		}
 
 		if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))
@@ -435,5 +442,11 @@ public class SchematicBlockData
 		primitive.PrimitiveFlags = PrimitiveFlags.Collidable;
 		primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
 		return primitive.gameObject;
+	}
+
+	private GameObject CreateCullingParent()
+	{
+		var cullingParent = GameObject.Instantiate(PrefabManager.CullingParent);
+		return cullingParent.gameObject;
 	}
 }
