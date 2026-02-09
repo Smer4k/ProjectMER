@@ -218,17 +218,40 @@ public class SchematicBlockData
 		return light.gameObject;
 	}
 
-	private GameObject CreatePickup(SchematicObject schematicObject)
-	{
-		if (Properties.TryGetValue("Chance", out object property) && UnityEngine.Random.Range(0, 101) > Convert.ToSingle(property))
-			return new("Empty Pickup");
+    private GameObject CreatePickup(SchematicObject schematicObject)
+    {
+        if (Properties.TryGetValue("Chance", out object property) &&
+            UnityEngine.Random.Range(0, 101) > Convert.ToSingle(property))
+            return new("Empty Pickup");
 
-		Pickup pickup = Pickup.Create((ItemType)Convert.ToInt32(Properties["ItemType"]), Vector3.zero)!;
-		if (Properties.ContainsKey("Locked"))
-			PickupEventsHandler.ButtonPickups.Add(pickup.Serial, schematicObject);
+        if (Properties.TryGetValue("CustomItem", out object customItemObj))
+        {
+            string? customItemName = customItemObj?.ToString();
 
-		return pickup.GameObject;
-	}
+            if (!string.IsNullOrWhiteSpace(customItemName) &&
+                Exiled.CustomItems.API.Features.CustomItem.TryGet(customItemName, out var customItem))
+            {
+                var exiledPickup = customItem.Spawn(Vector3.zero);
+
+                if (exiledPickup != null)
+                {
+                    var labPickup = LabApi.Features.Wrappers.Pickup.Get(exiledPickup.Base);
+                    return labPickup.GameObject;
+                }
+            }
+        }
+
+		//fb
+        Pickup fallback = Pickup.Create(
+            (ItemType)Convert.ToInt32(Properties["ItemType"]),
+            Vector3.zero
+        )!;
+
+        if (Properties.ContainsKey("Locked"))
+            PickupEventsHandler.ButtonPickups.Add(fallback.Serial, schematicObject);
+
+        return fallback.GameObject;
+    }
 
 	private GameObject CreateWorkstation()
 	{
