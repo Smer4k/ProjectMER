@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;Exiled</Configurations>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Exiled|x64' ">
+    <Optimize>true</Optimize>
+    <DefineConstants>EXILED,TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +24,12 @@
     </Reference>
     <Reference Include="CommandSystem.Core">
       <HintPath>..\..\DLL\CommandSystem.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.API">
+      <HintPath>..\..\DLL\EXILED\Exiled.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.CustomItems">
+      <HintPath>..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
     </Reference>
     <Reference Include="LabApi">
       <HintPath>..\..\DLL\LabApi.dll</HintPath>

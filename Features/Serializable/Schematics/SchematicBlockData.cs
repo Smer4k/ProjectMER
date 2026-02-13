@@ -224,6 +224,7 @@ public class SchematicBlockData
             UnityEngine.Random.Range(0, 101) > Convert.ToSingle(property))
             return new("Empty Pickup");
 
+#if EXILED
         if (Properties.TryGetValue("CustomItem", out object customItemObj))
         {
             string? customItemName = customItemObj?.ToString();
@@ -240,6 +241,8 @@ public class SchematicBlockData
                 }
             }
         }
+#endif
+
 
 		//fb
         Pickup fallback = Pickup.Create(
