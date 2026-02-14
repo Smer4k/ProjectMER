@@ -21,6 +21,7 @@ using LabApiLocker = LabApi.Features.Wrappers.Locker;
 using LapApiLockerChamber = LabApi.Features.Wrappers.LockerChamber;
 using Locker = MapGeneration.Distributors.Locker;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
+using Random = UnityEngine.Random;
 using SpawnableCullingParent = AdminToys.SpawnableCullingParent;
 using TextToy = AdminToys.TextToy;
 using WaypointToy = AdminToys.WaypointToy;
@@ -47,7 +48,7 @@ public class SchematicBlockData
 
 	public virtual Dictionary<string, object> Properties { get; set; }
 
-	public GameObject Create(SchematicObject schematicObject, Transform parentTransform)
+	public GameObject? Create(SchematicObject schematicObject, Transform parentTransform)
 	{
 		var commonBlock = BlockType is BlockType.Light or BlockType.Empty or BlockType.Interactable
 			or BlockType.Primitive or BlockType.Schematic or BlockType.Pickup or BlockType.Waypoint or BlockType.Text;
@@ -72,7 +73,7 @@ public class SchematicBlockData
 			}
 		}
 
-		GameObject gameObject = BlockType switch
+		GameObject? gameObject = BlockType switch
 		{
 			BlockType.Empty => CreateEmpty(),
 			BlockType.Primitive => CreatePrimitive(),
@@ -91,9 +92,13 @@ public class SchematicBlockData
 			BlockType.Capybara => CreateCapybara(),
 			BlockType.PlayerBlocker => CreatePlayerBlocker(),
 			BlockType.CullingParent => CreateCullingParent(),
+			BlockType.MirrorPrefab => CreateMirrorPrefab(),
+			BlockType.Clutter => CreateClutter(),
 			_ => CreateEmpty(true)
 		};
-
+		
+		if (gameObject == null)
+			return null;
 		gameObject.name = Name;
 
 		Transform transform = gameObject.transform;
@@ -110,7 +115,7 @@ public class SchematicBlockData
 		}
 
 		// if you don't remove the parent before NetworkServer.Spawn then there won't be a door
-		if (BlockType == BlockType.Door || BlockType == BlockType.CullingParent)
+		if (BlockType is BlockType.Door or BlockType.CullingParent or BlockType.MirrorPrefab)
 		{
 			transform.SetParent(null);
 		}
@@ -474,5 +479,18 @@ public class SchematicBlockData
 	{
 		var cullingParent = GameObject.Instantiate(PrefabManager.CullingParent);
 		return cullingParent.gameObject;
+	}
+
+	private GameObject CreateMirrorPrefab()
+	{
+		var type = (MirrorPrefabType)Convert.ToInt32(Properties["MirrorType"]);
+		var prefab = PrefabManager.GetMirrorPrefab(type);
+		return GameObject.Instantiate(prefab);
+	}
+
+	private GameObject? CreateClutter()
+	{
+		var chance = Convert.ToSingle(Properties["SpawnChance"]);
+		return Random.Range(0f, 100f) > chance ? null : CreateEmpty();
 	}
 }

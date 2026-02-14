@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <LangVersion>12</LangVersion>
@@ -25,10 +25,10 @@
     <Reference Include="CommandSystem.Core">
       <HintPath>..\..\DLL\CommandSystem.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.API">
+    <Reference Include="Exiled.API" Condition=" '$(Configuration)|$(Platform)' != 'Exiled|x64' ">
       <HintPath>..\..\DLL\EXILED\Exiled.API.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.CustomItems">
+    <Reference Include="Exiled.CustomItems" Condition=" '$(Configuration)|$(Platform)' != 'Exiled|x64' ">
       <HintPath>..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
     </Reference>
     <Reference Include="LabApi">

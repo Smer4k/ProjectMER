@@ -47,7 +47,10 @@ public static class MapUtils
 				    BlockType.Pickup or 
 				    BlockType.Waypoint or 
 				    BlockType.Text or 
-				    BlockType.Workstation) 
+				    BlockType.Workstation or 
+				    BlockType.Clutter or
+				    BlockType.MirrorPrefab or 
+				    BlockType.PlayerBlocker) 
 					continue;
 				var transform = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId];
 				Room room = RoomExtensions.GetRoomAtPosition(transform.position);

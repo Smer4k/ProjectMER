@@ -147,7 +147,15 @@ public class SchematicObject : MonoBehaviour
 
 	private void CreateRecursiveFromID(int id, List<SchematicBlockData> blocks, Transform parentGameObject)
 	{
-		Transform childGameObjectTransform = CreateObject(blocks.Find(c => c.ObjectId == id), parentGameObject) ?? transform; // Create the object first before creating children.
+		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
+		Transform? childGameObjectTransform = transform; // Create the object first before creating children.
+
+		if (blockData != null)
+			childGameObjectTransform = CreateObject(blockData, parentGameObject);
+		
+		if (childGameObjectTransform == null)
+			return;
+
 		int[] parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
 
 		// Gets all the ObjectIds of all the schematic blocks inside "blocks" argument.
@@ -165,8 +173,11 @@ public class SchematicObject : MonoBehaviour
 		if (block == null)
 			return null;
 
-		GameObject gameObject = block.Create(this, parentTransform);
+		GameObject? gameObject = block.Create(this, parentTransform);
 
+		if (gameObject == null)
+			return null;
+		
 		if (block.BlockType == BlockType.Camera)
 			gameObject.GetComponent<Scp079CameraToy>()?.SetRoom(null, null);
 

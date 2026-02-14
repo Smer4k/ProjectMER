@@ -3,6 +3,7 @@ using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using MapGeneration.Distributors;
 using Mirror;
+using ProjectMER.Features.Enums;
 using UnityEngine;
 using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -57,7 +58,31 @@ public static class PrefabManager
 
 	public static WaypointToy Waypoint { get; private set; }
 	public static SpawnableCullingParent CullingParent { get; private set; }
-
+	public static GameObject BrokenElectricalBox { get; private set; }
+	public static GameObject SimpleBoxes { get; private set; }
+	public static GameObject PipesShort { get; private set; }
+	public static GameObject BoxesLadder { get; private set; }
+	public static GameObject TankSupportedShelf { get; private set; }
+	public static GameObject AngledFences { get; private set; }
+	public static GameObject HugeOrangePipes { get; private set; }
+	public static GameObject PipesLong { get; private set; }
+	
+	public static GameObject GetMirrorPrefab(MirrorPrefabType type)
+	{
+		return type switch
+		{
+			MirrorPrefabType.BrokenElectricalBox => BrokenElectricalBox,
+			MirrorPrefabType.SimpleBoxes => SimpleBoxes,
+			MirrorPrefabType.PipesShort => PipesShort,
+			MirrorPrefabType.BoxesLadder => BoxesLadder,
+			MirrorPrefabType.TankSupportedShelf => TankSupportedShelf,
+			MirrorPrefabType.AngledFences => AngledFences,
+			MirrorPrefabType.HugeOrangePipes => HugeOrangePipes,
+			MirrorPrefabType.PipesLong => PipesLong,
+			_ => throw new InvalidOperationException(),
+		};
+	}
+	
 	public static void RegisterPrefabs()
 	{
 		foreach (GameObject gameObject in NetworkClient.prefabs.Values)
@@ -223,6 +248,34 @@ public static class PrefabManager
 			{
 				CullingParent = spawnableCullingParent;
 				continue;
+			}
+			
+			switch (gameObject.name)
+			{
+				case "Broken Electrical Box Open Connector":
+					BrokenElectricalBox = gameObject;
+					break;
+				case "Simple Boxes Open Connector":
+					SimpleBoxes = gameObject;
+					break;
+				case "Pipes Short Open Connector":
+					PipesShort = gameObject;
+					break;
+				case "Boxes Ladder Open Connector":
+					BoxesLadder = gameObject;
+					break;
+				case "Tank-Supported Shelf Open Connector":
+					TankSupportedShelf = gameObject;
+					break;
+				case "Angled Fences Open Connector":
+					AngledFences = gameObject;
+					break;
+				case "Huge Orange Pipes Open Connector":
+					HugeOrangePipes = gameObject;
+					break;
+				case "Pipes Long Open Connector":
+					PipesLong = gameObject;
+					break;
 			}
 
 		}

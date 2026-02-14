@@ -77,7 +77,8 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 			    BlockType.Workstation and not 
 			    BlockType.Locker and not
 			    BlockType.Door and not 
-			    BlockType.CullingParent) 
+			    BlockType.CullingParent and not
+			    BlockType.MirrorPrefab) 
 				continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
 			
@@ -86,11 +87,21 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
 				gameObject.transform.SetParent(parent.transform);
 				gameObject.transform.localPosition = block.Position;
+				gameObject.transform.localScale = block.Scale;
 				gameObject.transform.SetParent(null);
 				if (gameObject.TryGetComponent(out NetIdWaypoint waypointBase))
 				{
 					waypointBase.SetPosition();
 				}
+			}
+
+			if (block.BlockType == BlockType.MirrorPrefab)
+			{
+				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
+				gameObject.transform.SetParent(parent.transform);
+				gameObject.transform.localPosition = block.Position;
+				gameObject.transform.localScale = block.Scale;
+				gameObject.transform.SetParent(null);
 			}
 
 			if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))
@@ -105,6 +116,7 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 				var parent = schematicObject.ObjectFromId[block.ParentId].gameObject;
 				gameObject.transform.SetParent(parent.transform);
 				gameObject.transform.localPosition = block.Position;
+				gameObject.transform.localScale = block.Scale;
 				gameObject.transform.SetParent(null);
 				spawnableCullingParent.NetworkBoundsPosition = gameObject.transform.position;
 				spawnableCullingParent.NetworkBoundsSize = gameObject.transform.localScale;
