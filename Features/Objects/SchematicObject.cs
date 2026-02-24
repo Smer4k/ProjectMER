@@ -198,8 +198,32 @@ public class SchematicObject : MonoBehaviour
 
 		if (string.IsNullOrEmpty(animatorName))
 			return false;
+		Object? animatorObject = null;
+		var list = AssetBundle.GetAllLoadedAssetBundles();
+		if (list != null)
+		{
+			AssetBundle? assetBundle = null;
+			foreach (var asset in list)
+			{
+				if (asset?.mainAsset?.name == animatorName)
+				{
+					assetBundle = asset;
+					break;
+				}
+			}
 
-		Object? animatorObject = AssetBundle.GetAllLoadedAssetBundles().FirstOrDefault(x => x.mainAsset.name == animatorName)?.LoadAllAssets().First(x => x is RuntimeAnimatorController);
+			if (assetBundle != null)
+			{
+				foreach (var asset in assetBundle.LoadAllAssets())
+				{
+					if (asset is RuntimeAnimatorController controller)
+					{
+						animatorObject = controller;
+						break;
+					}
+				}
+			}
+		}
 
 		if (animatorObject is null)
 		{
@@ -210,8 +234,22 @@ public class SchematicObject : MonoBehaviour
 				Logger.Warn($"{gameObject.name} block of schematic should have a {animatorName} animator attached, but the file does not exist!");
 				return false;
 			}
+			
+			var assets = AssetBundle.LoadFromFile(path).LoadAllAssets();
+			foreach (var asset in assets)
+			{
+				if (asset is RuntimeAnimatorController controller)
+				{
+					animatorObject = controller;
+					break;
+				}
+			}
+		}
 
-			animatorObject = AssetBundle.LoadFromFile(path).LoadAllAssets().First(x => x is RuntimeAnimatorController);
+		if (animatorObject == null)
+		{
+			Logger.Error($"Animator {animatorName} not found!");
+			return false;
 		}
 
 		animatorController = (RuntimeAnimatorController)animatorObject;
