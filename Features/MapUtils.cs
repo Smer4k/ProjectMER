@@ -297,8 +297,74 @@ public static class MapUtils
 
 		return data;
 	}
+	
+	public static bool TryGetSchematicDataByName(string folderPath, string schematicName, out SchematicObjectDataList data)
+	{
+		try
+		{
+			data = GetSchematicDataByName(folderPath, schematicName);
+			return true;
+		}
+		catch (Exception)
+		{
+			data = null!;
+			return false;
+		}
+	}
 
-	public static string[] GetAvailableSchematicNames() => Directory.GetFiles(ProjectMER.SchematicsDir, "*.json", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension).Where(x => !x.Contains('-')).ToArray();
+	public static SchematicObjectDataList GetSchematicDataByName(string folderPath, string schematicName)
+	{
+		SchematicObjectDataList data;
+		string schematicDirPath = Path.Combine(folderPath, schematicName);
+		string schematicJsonPath = Path.Combine(schematicDirPath, $"{schematicName}.json");
+		string misplacedSchematicJsonPath = schematicDirPath + ".json";
+
+		if (!Directory.Exists(schematicDirPath))
+		{
+			// Some users may throw a single JSON file into the provided folder, this automatically creates and moved the file to the correct schematic directory.
+			if (File.Exists(misplacedSchematicJsonPath))
+			{
+				Directory.CreateDirectory(schematicDirPath);
+				File.Move(misplacedSchematicJsonPath, schematicJsonPath);
+				return GetSchematicDataByName(folderPath, schematicName);
+			}
+
+			string error = $"Failed to load schematic data: Directory {schematicName} does not exist in {folderPath}!";
+			Logger.Error(error);
+			throw new DirectoryNotFoundException(error);
+		}
+
+		if (!File.Exists(schematicJsonPath))
+		{
+			// Same as above but with the folder existing and file not being there for some reason.
+			if (File.Exists(misplacedSchematicJsonPath))
+			{
+				File.Move(misplacedSchematicJsonPath, schematicJsonPath);
+				return GetSchematicDataByName(folderPath, schematicName);
+			}
+
+			string error = $"Failed to load schematic data: File {schematicName}.json does not exist in {folderPath}!";
+			Logger.Error(error);
+			throw new FileNotFoundException(error);
+		}
+
+		try
+		{
+			data = JsonSerializer.Deserialize<SchematicObjectDataList>(File.ReadAllText(schematicJsonPath));
+			data.Path = schematicDirPath;
+		}
+		catch (JsonParsingException e)
+		{
+			string error = $"Failed to load schematic data: File {schematicName}.json has JSON errors!\n{e.ToString().Split('\n')[0]}";
+			Logger.Error(error);
+			throw new JsonParsingException(error);
+		}
+
+		return data;
+	}
+
+	public static string[] GetAvailableSchematicNames() => GetAvailableSchematicNames(ProjectMER.SchematicsDir);
+	public static string[] GetAvailableSchematicNames(string folder) => Directory.GetFiles(folder, "*.json", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension).Where(x => !x.Contains('-')).ToArray();
 
 	public static string GetColoredMapName(string mapName)
 	{

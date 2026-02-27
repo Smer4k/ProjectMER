@@ -17,6 +17,8 @@ namespace ProjectMER.Features.Serializable.Schematics;
 
 public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 {
+	// When provided, this folder will be used instead of the default ProjectMER.SchematicsDir
+	public string? FolderPath { get; init; }
 	public string SchematicName { get; set; } = "None";
 
 	public override GameObject? SpawnOrUpdateObject(Room? room = null, GameObject? instance = null)
@@ -37,9 +39,18 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 		
 		if (instance == null)
 		{
-			_ = MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList? data) ? data : null;
+			SchematicObjectDataList data;
+			bool success;
+			if (FolderPath != null)
+			{
+				success = MapUtils.TryGetSchematicDataByName(FolderPath, SchematicName, out data);
+			}
+			else
+			{
+				success = MapUtils.TryGetSchematicDataByName(SchematicName, out data);
+			}
 
-			if (data == null)
+			if (!success)
 			{
 				GameObject.Destroy(schematic.gameObject);
 				return null;
@@ -64,9 +75,17 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 
 	public void UpdatePositionCustomObjects(GameObject instance, bool updateDoors = true)
 	{
-		
-		if (!MapUtils.TryGetSchematicDataByName(SchematicName, out SchematicObjectDataList data))
-			return;
+		SchematicObjectDataList data;
+		if (FolderPath != null)
+		{
+			if (!MapUtils.TryGetSchematicDataByName(FolderPath, SchematicName, out data))
+				return;
+		}
+		else
+		{
+			if (!MapUtils.TryGetSchematicDataByName(SchematicName, out data))
+				return;
+		}
 
 		if (!instance.TryGetComponent(out SchematicObject schematicObject)) 
 			return;
