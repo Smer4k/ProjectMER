@@ -1,26 +1,31 @@
-using System;
 using LabApi.Features.Wrappers;
+
 using ProjectMER.Features.Serializable;
+
 using UnityEngine;
 
 namespace ProjectMER.Features.Objects;
 
 public class TeleportObject : MonoBehaviour
 {
-	private void Start()
+    private readonly Dictionary<Player, DateTime> cooldowns = [];
+
+    private MapEditorObject _mapEditorObject;
+
+    public SerializableTeleport Base;
+
+    private void Start()
+    {
+        _mapEditorObject = GetComponent<MapEditorObject>();
+        Base = (SerializableTeleport)_mapEditorObject.Base;
+    }
+
+    public TeleportObject? GetRandomTarget()
 	{
-		_mapEditorObject = GetComponent<MapEditorObject>();
-		Base = (SerializableTeleport)_mapEditorObject.Base;
-	}
+        if (Base.Targets.Count == 0)
+            return null;
 
-	public SerializableTeleport Base;
-	private MapEditorObject _mapEditorObject;
-
-	public DateTime NextTimeUse;
-
-	public TeleportObject? GetRandomTarget()
-	{
-		string targetId = Base.Targets.RandomItem();
+        string targetId = Base.Targets.RandomItem();
 
 		foreach (TeleportObject teleportObject in FindObjectsByType<TeleportObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
 		{
@@ -35,22 +40,25 @@ public class TeleportObject : MonoBehaviour
 
 	public void OnTriggerEnter(Collider other)
 	{
-		Player? player = Player.Get(other.gameObject);
+        if (!other.CompareTag("Player"))
+            return;
+
+        Player? player = Player.Get(other.gameObject);
 		if (player is null)
 			return;
 
-		if (NextTimeUse > DateTime.Now)
-			return;
+        if (cooldowns.TryGetValue(player, out DateTime next) && next > DateTime.Now)
+            return;
 
-		TeleportObject? target = GetRandomTarget();
+        TeleportObject? target = GetRandomTarget();
 		if (target == null)
 			return;
 
-		DateTime dateTime = DateTime.Now.AddSeconds(Base.Cooldown);
-		NextTimeUse = dateTime;
-		target.NextTimeUse = dateTime;
+        DateTime cooldownUntil = DateTime.Now.AddSeconds(Base.Cooldown);
+        cooldowns[player] = cooldownUntil;
+        target.cooldowns[player] = cooldownUntil;
 
-		player.Position = target.gameObject.transform.position;
+        player.Position = target.gameObject.transform.position;
 		player.LookRotation = target.gameObject.transform.eulerAngles;
 	}
 }
