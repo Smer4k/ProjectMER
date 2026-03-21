@@ -3,6 +3,7 @@ using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
+using MapGeneration;
 using MapGeneration.Distributors;
 using MEC;
 using Mirror;
@@ -77,7 +78,7 @@ public class SchematicBlockData
 		{
 			BlockType.Empty => CreateEmpty(),
 			BlockType.Primitive => CreatePrimitive(),
-			BlockType.Light => CreateLight(),
+			BlockType.Light => CreateLight(schematicObject),
 			BlockType.Pickup => CreatePickup(schematicObject),
 			BlockType.Workstation => CreateWorkstation(),
 			BlockType.Teleport => CreateTeleport(parentTransform),
@@ -197,7 +198,7 @@ public class SchematicBlockData
 		return primitive.gameObject;
 	}
 
-	private GameObject CreateLight()
+	private GameObject CreateLight(SchematicObject schematicObject)
 	{
 		LightSourceToy light = GameObject.Instantiate(PrefabManager.LightSource);
 
@@ -220,6 +221,18 @@ public class SchematicBlockData
 			light.NetworkShadowStrength = Convert.ToSingle(Properties["ShadowStrength"]);
 		}
 
+		if (Properties.TryGetValue("Flicker", out object flickerEnable))
+		{
+			if (!Convert.ToBoolean(flickerEnable)) 
+				return light.gameObject;
+			var flicker = light.gameObject.AddComponent<FlickerController>();
+			flicker.AddSchematic(schematicObject);
+			if (Properties.TryGetValue("FlickerZone", out var flickerZone))
+			{
+				flicker.Zone = (FacilityZone)Convert.ToInt32(flickerZone);
+			}
+		}
+		
 		return light.gameObject;
 	}
 

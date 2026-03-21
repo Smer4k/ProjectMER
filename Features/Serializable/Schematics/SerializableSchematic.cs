@@ -35,6 +35,7 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 		schematic.transform.SetPositionAndRotation(position, rotation);
 		schematic.transform.localScale = Scale;
 
+		FlickerController.OnSchematicUpdate(schematic.gameObject);
 		UpdatePositionCustomObjects(schematic);
 		
 		if (instance == null)

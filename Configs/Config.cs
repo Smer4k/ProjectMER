@@ -12,6 +12,9 @@ public class Config
 
 	[Description("Enable/disable backward compatibility with the official version of MER (custom objects are converted to ToolGun objects when saving the map)")]
 	public bool BackwardСompatibility { get; set; } = false;
+	
+	[Description("The radius at which SCP 2176 will turn off LightSourceToy (if they have Flicker enabled)")]
+	public float LightDisablingRadiusScp2176 { get; set; } = 16.0f;
 
 	[Description(
 	"\n" +

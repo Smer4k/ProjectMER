@@ -20,6 +20,9 @@ public class GenericEventsHandler : CustomEventsHandler
 		ToolGunHandler.PlayerSelectedObjectDict.Clear();
 		PickupEventsHandler.ButtonPickups.Clear();
 		PickupEventsHandler.PickupUsesLeft.Clear();
+		FlickerController.Instances.Clear();
+		FlickerController.FlickersBySchematic.Clear();
+		FlickerController.FlickersByRoom.Clear();
 	}
 
 	public override void OnPlayerSpawning(PlayerSpawningEventArgs ev)
