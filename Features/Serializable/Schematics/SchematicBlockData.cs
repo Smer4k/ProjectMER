@@ -180,6 +180,12 @@ public class SchematicBlockData
 		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
 		primitive.NetworkMaterialColor = Properties["Color"].ToString().GetColorFromString();
 
+		var trigger = false;
+		if (Properties.TryGetValue("Trigger", out object objTrigger))
+		{
+			trigger = Convert.ToBoolean(objTrigger);
+		}
+		
 		PrimitiveFlags primitiveFlags;
 		if (Properties.TryGetValue("PrimitiveFlags", out object flags))
 		{
@@ -192,9 +198,16 @@ public class SchematicBlockData
 			if (Scale.x >= 0f)
 				primitiveFlags |= PrimitiveFlags.Collidable;
 		}
-
+		
+		if (trigger && primitiveFlags.HasFlag(PrimitiveFlags.Collidable))
+			primitiveFlags &= ~PrimitiveFlags.Collidable;
+		
 		primitive.NetworkPrimitiveFlags = primitiveFlags;
-
+		if (trigger)
+		{
+			primitive._collider.enabled = true;
+			primitive._collider.isTrigger = true;
+		}
 		return primitive.gameObject;
 	}
 

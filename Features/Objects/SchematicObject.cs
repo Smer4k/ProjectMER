@@ -314,7 +314,7 @@ public class SchematicObject : MonoBehaviour
 		Schematic.OnSchematicDestroyed(new(this, Name));
 	}
 
-	internal Dictionary<int, Transform> ObjectFromId = [];
+	public Dictionary<int, Transform> ObjectFromId = [];
 
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];
