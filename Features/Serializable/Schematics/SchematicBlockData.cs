@@ -95,6 +95,7 @@ public class SchematicBlockData
 			BlockType.CullingParent => CreateCullingParent(),
 			BlockType.MirrorPrefab => CreateMirrorPrefab(),
 			BlockType.Clutter => CreateClutter(),
+			BlockType.Trigger => CreateTrigger(),
 			_ => CreateEmpty(true)
 		};
 		
@@ -179,12 +180,6 @@ public class SchematicBlockData
 
 		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
 		primitive.NetworkMaterialColor = Properties["Color"].ToString().GetColorFromString();
-
-		var trigger = false;
-		if (Properties.TryGetValue("Trigger", out object objTrigger))
-		{
-			trigger = Convert.ToBoolean(objTrigger);
-		}
 		
 		PrimitiveFlags primitiveFlags;
 		if (Properties.TryGetValue("PrimitiveFlags", out object flags))
@@ -199,15 +194,7 @@ public class SchematicBlockData
 				primitiveFlags |= PrimitiveFlags.Collidable;
 		}
 		
-		if (trigger && primitiveFlags.HasFlag(PrimitiveFlags.Collidable))
-			primitiveFlags &= ~PrimitiveFlags.Collidable;
-		
 		primitive.NetworkPrimitiveFlags = primitiveFlags;
-		if (trigger)
-		{
-			primitive._collider.enabled = true;
-			primitive._collider.isTrigger = true;
-		}
 		return primitive.gameObject;
 	}
 
@@ -518,5 +505,32 @@ public class SchematicBlockData
 	{
 		var chance = Convert.ToSingle(Properties["SpawnChance"]);
 		return Random.Range(0f, 100f) > chance ? null : CreateEmpty();
+	}
+
+	public GameObject? CreateTrigger()
+	{
+		GameObject gameObject = GameObject.Instantiate(new GameObject("Trigger"));
+		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		Collider collider;
+		switch (primitiveType)
+		{
+			case PrimitiveType.Sphere:
+				collider = gameObject.AddComponent<SphereCollider>();
+				break;
+			case PrimitiveType.Capsule:
+			case PrimitiveType.Cylinder:
+				var capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
+				capsuleCollider.radius = 0.5f;
+				capsuleCollider.height = 2f;
+				collider = capsuleCollider;
+				break;
+			default:
+				collider = gameObject.AddComponent<BoxCollider>();
+				break;
+		}
+		
+		collider.isTrigger = true;
+		gameObject.AddComponent<TriggerObject>();
+		return gameObject;
 	}
 }

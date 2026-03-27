@@ -50,7 +50,9 @@ public static class MapUtils
 				    BlockType.Workstation or 
 				    BlockType.Clutter or
 				    BlockType.MirrorPrefab or 
-				    BlockType.PlayerBlocker) 
+				    BlockType.PlayerBlocker or 
+				    BlockType.Trigger or
+				    BlockType.CullingParent) 
 					continue;
 				var transform = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId];
 				Room room = RoomExtensions.GetRoomAtPosition(transform.position);

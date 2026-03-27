@@ -56,4 +56,5 @@ public enum BlockType
 	CullingParent = 36,
 	MirrorPrefab = 37,
 	Clutter = 38,
+	Trigger = 39,
 }
