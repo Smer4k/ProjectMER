@@ -36,6 +36,8 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 - CullingParent - optimization for schematics, removes the rendering of child objects if they have disappeared behind the fog distances. (Works on the client side)
 - Trigger - is triggered when the player enters/exits and he is still in it. (For actions or plugins)
 - It is possible to spawn a schematic from another path (for plugins)
+- New parameters Flicker and FlickerZone have been added for light sources, they make light sources react to the power outages in the room and Scp 2176
+- You can edit the MovementSmoothing parameter for each object (responsible for the smooth movement of the object locally for the player)
 
 # Credits
 - Plugin made by [Michal78900](https://github.com/Michal78900)
