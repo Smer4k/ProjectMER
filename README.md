@@ -11,6 +11,11 @@
     <img src="https://img.shields.io/discord/947849283514814486?style=for-the-badge&logo=discord" alt="Chat on Discord">
 </a>    
 
+<div align="center">
+<h4>Fork downloads:</h4>
+<img src="https://img.shields.io/github/downloads/Smer4k/ProjectMER/total?style=for-the-badge&logo=github" alt="Downloads">
+</div>
+
 </div>
 
 # Installation
