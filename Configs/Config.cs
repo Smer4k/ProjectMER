@@ -16,6 +16,22 @@ public class Config
 	[Description("The radius at which SCP 2176 will turn off LightSourceToy (if they have Flicker enabled)")]
 	public float LightDisablingRadiusScp2176 { get; set; } = 16.0f;
 
+	public bool ActionEnabled  { get; set; } = false;
+	
+	public List<string> BannedCommandsForActions { get; set; } =
+	[
+		"exit",
+		"softrestart",
+		"restartnextround",
+		"quit",
+		"ban",
+		"offlineban",
+		"unban",
+		"setgroup",
+		"executeas",
+		"setspectatable",
+	];
+	
 	[Description(
 	"\n" +
 	"# ------------------------------Actions on event------------------------------\n" +

@@ -95,7 +95,7 @@ public class SchematicBlockData
 			BlockType.CullingParent => CreateCullingParent(),
 			BlockType.MirrorPrefab => CreateMirrorPrefab(),
 			BlockType.Clutter => CreateClutter(),
-			BlockType.Trigger => CreateTrigger(),
+			BlockType.Trigger => CreateTrigger(schematicObject),
 			_ => CreateEmpty(true)
 		};
 		
@@ -507,7 +507,7 @@ public class SchematicBlockData
 		return Random.Range(0f, 100f) > chance ? null : CreateEmpty();
 	}
 
-	public GameObject? CreateTrigger()
+	public GameObject? CreateTrigger(SchematicObject schematicObject)
 	{
 		GameObject gameObject = GameObject.Instantiate(new GameObject("Trigger"));
 		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
@@ -530,7 +530,7 @@ public class SchematicBlockData
 		}
 		
 		collider.isTrigger = true;
-		gameObject.AddComponent<TriggerObject>();
+		gameObject.AddComponent<TriggerObject>().Initialize(schematicObject, ObjectId);
 		return gameObject;
 	}
 }

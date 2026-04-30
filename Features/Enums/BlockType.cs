@@ -57,4 +57,5 @@ public enum BlockType
 	MirrorPrefab = 37,
 	Clutter = 38,
 	Trigger = 39,
+	NavPoint = 40,
 }

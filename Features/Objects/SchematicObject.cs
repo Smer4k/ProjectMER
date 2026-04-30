@@ -1,6 +1,9 @@
 using AdminToys;
+using LabApi.Features.Wrappers;
+using MEC;
 using Mirror;
 using ProjectMER.Events.Handlers;
+using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Serializable.Schematics;
 using UnityEngine;
@@ -135,11 +138,14 @@ public class SchematicObject : MonoBehaviour
 			{ data.RootObjectId, transform },
 		};
 
+		ActionHostsByObjectId.Clear();
+		ActionsByObjectId.Clear();
+
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
 
 		AddRigidbodies();
 		AddAnimators();
-
+		
 		Schematic.OnSchematicSpawned(new(this, Name));
 
 		return this;
@@ -155,7 +161,7 @@ public class SchematicObject : MonoBehaviour
 		
 		if (childGameObjectTransform == null)
 			return;
-
+		
 		int[] parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
 
 		// Gets all the ObjectIds of all the schematic blocks inside "blocks" argument.
@@ -174,7 +180,7 @@ public class SchematicObject : MonoBehaviour
 			return null;
 
 		GameObject? gameObject = block.Create(this, parentTransform);
-
+		
 		if (gameObject == null)
 			return null;
 		
@@ -183,21 +189,63 @@ public class SchematicObject : MonoBehaviour
 
 		if (block.BlockType != BlockType.Teleport && block.BlockType != BlockType.PlayerSpawnPoint)
 			NetworkServer.Spawn(gameObject);
-
+		
 		ObjectFromId.Add(block.ObjectId, gameObject.transform);
 
+		if (ProjectMER.Singleton.Config.ActionEnabled)
+		{
+			RegisterActionHost(block);
+
+			if (block.BlockType == BlockType.Interactable)
+			{
+				ActionInteractableToy.Register(block.ObjectId, InteractableToy.Get(gameObject.GetComponent<InvisibleInteractableToy>()), this);
+			}
+		}
+		
 		if (block.BlockType != BlockType.Light && TryGetAnimatorController(block.AnimatorName, out RuntimeAnimatorController animatorController))
 			_animators.Add(gameObject, animatorController);
 
 		return gameObject.transform;
 	}
 
+	private void RegisterActionHost(SchematicBlockData block)
+	{
+		List<ActionEventList> actionEvents = ActionEventSerialization.ReadEventListsFromProperties(block.Properties);
+		if (actionEvents.Count == 0)
+			return;
+			
+		ActionEventHostObject actionHost = new(this, block.ObjectId);
+		actionHost.SetActionEvents(actionEvents);
+
+		ActionHostsByObjectId[block.ObjectId] = actionHost;
+		ActionsByObjectId[block.ObjectId] = actionHost.ActionsByEventId;
+	}
+
+	public bool TryGetActionsByEventId(int objectId, string eventId, out List<ActionGame> actions)
+	{
+		actions = null!;
+
+		if (!ActionsByObjectId.TryGetValue(objectId, out Dictionary<string, List<ActionGame>> actionsByEventId))
+			return false;
+
+		return actionsByEventId.TryGetValue(eventId, out actions);
+	}
+
+	public CoroutineHandle RunActionsByEventId(int objectId, string eventId, Player? target = null)
+	{
+		if (!ActionHostsByObjectId.TryGetValue(objectId, out ActionEventHostObject actionHost))
+			return default;
+
+		return actionHost.RunActions(eventId, target);
+	}
+	
 	private bool TryGetAnimatorController(string animatorName, out RuntimeAnimatorController animatorController)
 	{
 		animatorController = null!;
 
 		if (string.IsNullOrEmpty(animatorName))
 			return false;
+
 		Object? animatorObject = null;
 		var list = AssetBundle.GetAllLoadedAssetBundles();
 		if (list != null)
@@ -224,7 +272,7 @@ public class SchematicObject : MonoBehaviour
 				}
 			}
 		}
-
+		
 		if (animatorObject is null)
 		{
 			string path = Path.Combine(DirectoryPath, animatorName);
@@ -234,7 +282,7 @@ public class SchematicObject : MonoBehaviour
 				Logger.Warn($"{gameObject.name} block of schematic should have a {animatorName} animator attached, but the file does not exist!");
 				return false;
 			}
-			
+
 			var assets = AssetBundle.LoadFromFile(path).LoadAllAssets();
 			foreach (var asset in assets)
 			{
@@ -245,13 +293,13 @@ public class SchematicObject : MonoBehaviour
 				}
 			}
 		}
-
+		
 		if (animatorObject == null)
 		{
 			Logger.Error($"Animator {animatorName} not found!");
 			return false;
 		}
-
+		
 		animatorController = (RuntimeAnimatorController)animatorObject;
 		return true;
 	}
@@ -310,12 +358,16 @@ public class SchematicObject : MonoBehaviour
 			if (obj.parent == null)
 				NetworkServer.Destroy(obj.gameObject);
 		}
+		ActionHostsByObjectId.Clear();
+		ActionsByObjectId.Clear();
 		NetworkServer.Destroy(gameObject);
 		Schematic.OnSchematicDestroyed(new(this, Name));
 	}
 
 	public Dictionary<int, Transform> ObjectFromId = [];
-
+	public Dictionary<int, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
+	public Dictionary<int, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
+	
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];
 	private readonly List<AdminToyBase> _adminToyBases = [];

@@ -37,6 +37,9 @@
     <Reference Include="Mirror">
       <HintPath>..\..\DLL\Mirror.dll</HintPath>
     </Reference>
+    <Reference Include="mscorlib">
+      <HintPath>..\Plugins\dependencies\mscorlib.dll</HintPath>
+    </Reference>
     <Reference Include="NorthwoodLib">
       <HintPath>..\..\DLL\NorthwoodLib.dll</HintPath>
     </Reference>
