@@ -26,6 +26,16 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 
 **More support can be found on a [Discord](https://discord.gg/JwAfeSd79u) server**
 
+# New in the fork:
+- Waypoints are fixed
+- Added all objects from AdminToys, Doors, MirrorObjects, Clutter, PlayerBlocker, CullingParent and Trigger for schematics in Unity
+- Actions for Trigger and Interactable (as in AMERT, but more simplified and less functional)
+- Cooldown for teleports is now different for each player
+- Clutter - spawn an object with some chance
+- PlayerBlocker - blocks the player, but not objects and bullets.
+- CullingParent - optimization for schematics, removes the rendering of child objects if they have disappeared behind the fog distances. (Works on the client side)
+- Trigger - is triggered when the player enters/exits and he is still in it. (For actions or plugins)
+
 # Credits
 - Plugin made by [Michal78900](https://github.com/Michal78900)
 - Original plugin idea and code overhaul by [Killers0992](https://github.com/Killers0992)
