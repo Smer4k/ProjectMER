@@ -167,7 +167,6 @@ public class ActionEventHostObject
                 break;
 
             case AnimatorControllerParameterType.Bool:
-                Logger.Info($"{ParseBool(action.Value)} BOOL {action.Value}");
                 animator.SetBool(paramHash, ParseBool(action.Value));
                 break;
 
