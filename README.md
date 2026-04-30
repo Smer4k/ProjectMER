@@ -35,6 +35,7 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 - PlayerBlocker - blocks the player, but not objects and bullets.
 - CullingParent - optimization for schematics, removes the rendering of child objects if they have disappeared behind the fog distances. (Works on the client side)
 - Trigger - is triggered when the player enters/exits and he is still in it. (For actions or plugins)
+- It is possible to spawn a schematic from another path (for plugins)
 
 # Credits
 - Plugin made by [Michal78900](https://github.com/Michal78900)
