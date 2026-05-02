@@ -218,6 +218,8 @@ public class ActionEventHostObject
         {
             case BlockType.Primitive:
                 var primitive = targetObj.GetComponent<PrimitiveObjectToy>();
+                if (primitive == null)
+                    break;
                 switch (action.Param)
                 {
                     case nameof(PrimitiveFlags.Visible):
@@ -240,9 +242,12 @@ public class ActionEventHostObject
                         primitive.NetworkMaterialColor = action.Value.GetColorFromString();
                         break;
                 }
+
                 break;
             case BlockType.Light:
                 var lightSourceToy = targetObj.GetComponent<LightSourceToy>();
+                if (lightSourceToy == null)
+                    break;
                 FlickerController flicker;
                 switch (action.Param)
                 {
@@ -295,6 +300,8 @@ public class ActionEventHostObject
                 break;
             case BlockType.Interactable:
                 var interactable = targetObj.GetComponent<InvisibleInteractableToy>();
+                if (interactable == null)
+                    break;
                 switch (action.Param)
                 {
                     case "Shape":
@@ -307,11 +314,23 @@ public class ActionEventHostObject
                     case "IsLocked":
                         interactable.IsLocked = ParseBool(action.Value);
                         break;
+                    case nameof(ActionInteractableToy.Permissions):
+                        if (!ActionInteractableToy.Instances.TryGetValue(InteractableToy.Get(interactable), out var actionInteractableToy))
+                            break;
+                        actionInteractableToy.Permissions = Enum.Parse<DoorPermissionFlags>(action.Value, true);
+                        break;
+                    case nameof(ActionInteractableToy.RequireAll):
+                        if (!ActionInteractableToy.Instances.TryGetValue(InteractableToy.Get(interactable), out actionInteractableToy))
+                            break;
+                        actionInteractableToy.RequireAll = ParseBool(action.Value);
+                        break;
                 }
 
                 break;
             case BlockType.Door:
                 var doorVariant = targetObj.GetComponent<DoorVariant>();
+                if (doorVariant == null)
+                    break;
                 switch (action.Param)
                 {
                     case "RequiredPermissions":
@@ -332,6 +351,8 @@ public class ActionEventHostObject
                 break;
             case BlockType.Text:
                 var textToy = targetObj.GetComponent<TextToy>();
+                if (textToy == null)
+                    break;
                 switch (action.Param)
                 {
                     case "Text":
@@ -341,6 +362,7 @@ public class ActionEventHostObject
                         textToy.Network_displaySize = ParseVector3(action.Value);
                         break;
                 }
+
                 break;
             default:
                 Logger.Warn($"Not Implemented for blockType: {action.BlockType}");

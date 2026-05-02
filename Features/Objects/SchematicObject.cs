@@ -198,7 +198,7 @@ public class SchematicObject : MonoBehaviour
 
 			if (block.BlockType == BlockType.Interactable)
 			{
-				ActionInteractableToy.Register(block.ObjectId, InteractableToy.Get(gameObject.GetComponent<InvisibleInteractableToy>()), this);
+				ActionInteractableToy.Register(block, InteractableToy.Get(gameObject.GetComponent<InvisibleInteractableToy>()), this);
 			}
 		}
 		

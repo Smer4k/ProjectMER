@@ -1,117 +1,94 @@
-﻿using LabApi.Features.Wrappers;
-using MEC;
+﻿using Interactables.Interobjects.DoorUtils;
+using LabApi.Features.Wrappers;
 using ProjectMER.Features.Objects;
+using ProjectMER.Features.Serializable.Schematics;
 
 namespace ProjectMER.Features.Actions;
 
 public sealed class ActionInteractableToy
 {
-    public static readonly List<ActionInteractableToy> Instances = new List<ActionInteractableToy>();
+    public static readonly Dictionary<InteractableToy, ActionInteractableToy> Instances = new();
 
     public readonly InteractableToy Toy;
     public readonly SchematicObject SchematicObject;
-    public readonly int ObjectId;
+    public readonly SchematicBlockData BlockData;
 
-    private static CoroutineHandle _coroutineCheckInstances;
+    public DoorPermissionFlags Permissions;
+    public bool RequireAll;
+    public bool PermissionsRejected;
 
-    public ActionInteractableToy(int objectId, InteractableToy toy, SchematicObject schematicObject)
+    public ActionInteractableToy(SchematicBlockData block, InteractableToy toy, SchematicObject schematicObject)
     {
-        if (schematicObject.TryGetActionsByEventId(objectId, nameof(OnInteracted), out _))
-        {
-            toy.OnInteracted += OnInteracted;
-        }
-
-        if (schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearchAborted), out _))
-        {
-            toy.Base.OnSearchAborted += OnSearchAborted;
-        }
-
-        if (schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearching), out _))
-        {
-            toy.OnSearching += OnSearching;
-        }
-
-        if (schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearched), out _))
-        {
-            toy.OnSearched += OnSearched;
-        }
-
-
         Toy = toy;
         SchematicObject = schematicObject;
-        ObjectId = objectId;
+        BlockData = block;
+        if (BlockData.Properties.TryGetValue("Permissions", out var permissions))
+        {
+            Permissions = (DoorPermissionFlags)Convert.ToUInt16(permissions);
+        }
+        if (BlockData.Properties.TryGetValue("RequireAll", out var requireAll))
+        {
+            RequireAll = Convert.ToBoolean(requireAll);
+        }
     }
 
-    public static void Register(int objectId, InteractableToy toy, SchematicObject schematicObject)
+    public static void Register(SchematicBlockData block, InteractableToy toy, SchematicObject schematicObject)
     {
         ActionInteractableToy? actionInteractableToy = null;
-
-        if (schematicObject.TryGetActionsByEventId(objectId, nameof(OnInteracted), out _) ||
-            schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearching), out _) ||
-            schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearched), out _) ||
-            schematicObject.TryGetActionsByEventId(objectId, nameof(OnSearchAborted), out _))
+        
+        if (schematicObject.TryGetActionsByEventId(block.ObjectId, nameof(OnInteracted), out _) ||
+            schematicObject.TryGetActionsByEventId(block.ObjectId, nameof(OnSearching), out _) ||
+            schematicObject.TryGetActionsByEventId(block.ObjectId, nameof(OnSearched), out _) ||
+            schematicObject.TryGetActionsByEventId(block.ObjectId, nameof(OnSearchAborted), out _))
         {
-            actionInteractableToy = new(objectId, toy, schematicObject);
+            actionInteractableToy = new(block, toy, schematicObject);
         }
         
         if (actionInteractableToy == null)
             return;
-
-        Instances.Add(actionInteractableToy);
-        if (!_coroutineCheckInstances.IsRunning || !_coroutineCheckInstances.IsValid)
-            _coroutineCheckInstances = Timing.RunCoroutine(CheckInstances());
+        
+        Instances.Add(toy, actionInteractableToy);
     }
 
-    private static IEnumerator<float> CheckInstances()
+    public void OnInteracted(Player player)
     {
-        while (true)
+        SchematicObject.RunActionsByEventId(BlockData.ObjectId, nameof(OnInteracted), player);
+    }
+
+    public void OnSearchAborted(Player player)
+    {
+        SchematicObject.RunActionsByEventId(BlockData.ObjectId, nameof(OnSearchAborted), player);
+    }
+
+    public void OnSearching(Player player)
+    {
+        SchematicObject.RunActionsByEventId(BlockData.ObjectId, nameof(OnSearching), player);
+    }
+
+    public void OnSearched(Player player)
+    {
+        SchematicObject.RunActionsByEventId(BlockData.ObjectId, nameof(OnSearched), player);
+    }
+
+    public bool CheckPermissions(Player player)
+    {
+        var playerPermissions = DoorPermissionFlags.None;
+        if (player.IsSCP)
         {
-            yield return Timing.WaitForSeconds(10f);
-
-            for (var i = 0; i < Instances.Count; i++)
-            {
-                yield return Timing.WaitForOneFrame;
-
-                if (Instances[i].Toy.Base != null)
-                    continue;
-                Instances[i].Unregister();
-                Instances.RemoveAt(i);
-                i--;
-            }
-
-            if (Instances.Count == 0)
-                break;
+            playerPermissions = DoorPermissionFlags.ScpOverride;
         }
-    }
 
-    private void OnInteracted(Player player)
-    {
-        if (Toy.IsLocked)
-            return;
-        SchematicObject.RunActionsByEventId(ObjectId, nameof(OnInteracted), player);
-    }
+        if (player.CurrentItem is KeycardItem keycardItem)
+        {
+            playerPermissions = keycardItem.Permissions;
+        }
 
-    private void OnSearchAborted(ReferenceHub hub)
-    {
-        SchematicObject.RunActionsByEventId(ObjectId, nameof(OnSearchAborted), Player.Get(hub));
-    }
+        if (player.IsBypassEnabled)
+            playerPermissions = DoorPermissionFlags.All;
 
-    private void OnSearching(Player player)
-    {
-        SchematicObject.RunActionsByEventId(ObjectId, nameof(OnSearching), player);
-    }
+        if (Permissions == DoorPermissionFlags.None)
+            return true;
 
-    private void OnSearched(Player player)
-    {
-        SchematicObject.RunActionsByEventId(ObjectId, nameof(OnSearched), player);
-    }
-
-    public void Unregister()
-    {
-        Toy.OnInteracted -= OnInteracted;
-        if (Toy.Base != null)
-            Toy.Base.OnSearchAborted -= OnSearchAborted;
-        Toy.OnSearching -= OnSearching;
-        Toy.OnSearched -= OnSearched;
+        return RequireAll ? playerPermissions.HasFlagAll(Permissions) : playerPermissions.HasFlagAny(Permissions);
     }
 }
