@@ -157,6 +157,17 @@ public class ActionEventHostObject
             Logger.Warn($"Animation action skipped: no Animator for object id {targetObjectId}.");
             return;
         }
+        
+        if (action.Param == "Pause")
+        {
+            animator.speed = 0;
+            return;
+        }
+        if (action.Param == "Resume")
+        {
+            animator.speed = 1;
+            return;
+        }
 
         int paramHash = GetAnimatorParamHash(action.Param);
 
