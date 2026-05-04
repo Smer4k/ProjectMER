@@ -147,7 +147,7 @@ public class SchematicBlockData
 		if (gameObject.TryGetComponent(out SpawnableCullingParent cullingParent))
 		{
 			cullingParent.NetworkBoundsPosition = gameObject.transform.position;
-			cullingParent.NetworkBoundsSize = Scale;
+			cullingParent.NetworkBoundsSize = Properties["BoundsSize"].ToVector3();
 		}
 
 		if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))

@@ -50,6 +50,18 @@ public static class StructExtensions
 		return new Vector3(x, y, z);
 	}
 
+	public static Vector3 ToVector3(this object jObject)
+	{
+		if (jObject is not IDictionary<string, object> dict)
+			return Vector3.zero;
+
+		return new Vector3(
+			Convert.ToSingle(dict["x"]),
+			Convert.ToSingle(dict["y"]),
+			Convert.ToSingle(dict["z"])
+		);
+	}
+
 	public static Vector2 ToVector2(this object jObject)
 	{
 		if (jObject is not IDictionary<string, object> dict)
