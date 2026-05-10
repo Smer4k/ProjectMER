@@ -147,7 +147,10 @@ public class SchematicBlockData
 		if (gameObject.TryGetComponent(out SpawnableCullingParent cullingParent))
 		{
 			cullingParent.NetworkBoundsPosition = gameObject.transform.position;
-			cullingParent.NetworkBoundsSize = Properties["BoundsSize"].ToVector3();
+			if (Properties != null && Properties.TryGetValue("BoundsSize", out var value))
+				cullingParent.NetworkBoundsSize = value.ToVector3();
+			else
+				cullingParent.NetworkBoundsSize = Scale;
 		}
 
 		if (gameObject.TryGetComponent(out StructurePositionSync structurePositionSync))
@@ -530,7 +533,16 @@ public class SchematicBlockData
 		}
 		
 		collider.isTrigger = true;
-		gameObject.AddComponent<TriggerObject>().Initialize(schematicObject, ObjectId);
+		gameObject.AddComponent<Rigidbody>().isKinematic = true;
+		var triggerObject = gameObject.AddComponent<TriggerObject>();
+		triggerObject.SchematicObject = schematicObject;
+		triggerObject.ObjectId = ObjectId;
+		
+		if (Properties.TryGetValue("TargetType", out object targetType))
+		{
+			triggerObject.TargetType = (TriggerTargetType)Convert.ToInt32(targetType);
+		}
+		
 		return gameObject;
 	}
 }
