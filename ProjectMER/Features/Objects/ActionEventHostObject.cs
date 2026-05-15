@@ -90,9 +90,6 @@ public sealed class ActionEventHostObject
             case ActionType.Animation:
                 ExecuteAnimationAction(action);
                 break;
-            case ActionType.Audio:
-                ExecuteAudioAction(action);
-                break;
             case ActionType.SetComponentProperty:
                 ExecuteSetComponentPropertyAction(action);
                 break;
@@ -207,17 +204,6 @@ public sealed class ActionEventHostObject
                 Logger.Warn($"Animation action skipped: unsupported ParamType {action.ParamType}.");
                 break;
         }
-    }
-
-    private void ExecuteAudioAction(ActionGame action)
-    {
-        var handler = OnAudioAction;
-        if (handler == null)
-        {
-            Logger.Warn("[AudioAction] Audio action skipped: no handler for audio action.");
-            return;
-        }
-        handler(_schematic, action);
     }
 
     private void ExecuteSetComponentPropertyAction(ActionGame action)
