@@ -96,6 +96,7 @@ public class SchematicBlockData
 			BlockType.MirrorPrefab => CreateMirrorPrefab(),
 			BlockType.Clutter => CreateClutter(),
 			BlockType.Trigger => CreateTrigger(schematicObject),
+			BlockType.AudioPlayer => CreateAudioPlayer(schematicObject),
 			_ => CreateEmpty(true)
 		};
 		
@@ -543,6 +544,42 @@ public class SchematicBlockData
 			triggerObject.TargetType = (TriggerTargetType)Convert.ToInt32(targetType);
 		}
 		
+		return gameObject;
+	}
+
+	public GameObject? CreateAudioPlayer(SchematicObject schematicObject)
+	{
+		GameObject gameObject = CreateEmpty();
+		var settings = new AudioPlayerSettings();
+		
+		if (Properties.TryGetValue("FileName", out object fileNameObj))
+			settings.FileName = Convert.ToString(fileNameObj);
+		
+		if (Properties.TryGetValue("IsShortClip", out object isShortClipObj))
+			settings.IsShortClip = Convert.ToBoolean(isShortClipObj);
+		
+		if (Properties.TryGetValue("PlayOnSpawn", out object playOnSpawnObj))
+			settings.PlayOnSpawn = Convert.ToBoolean(playOnSpawnObj);
+		
+		if (Properties.TryGetValue("Loop", out object loopObj))
+			settings.Loop = Convert.ToBoolean(loopObj);
+
+		if (Properties.TryGetValue("IsSpatial", out object isSpatialObj))
+			settings.IsSpatial = Convert.ToBoolean(isSpatialObj);
+
+		if (Properties.TryGetValue("Volume", out object volumeObj))
+			settings.Volume = Convert.ToSingle(volumeObj);
+		
+		if (Properties.TryGetValue("MinDistance", out object minDistanceObj))
+			settings.MinDistance = Convert.ToSingle(minDistanceObj);
+
+		if (Properties.TryGetValue("MaxDistance", out object maxDistanceObj))
+			settings.MaxDistance = Convert.ToSingle(maxDistanceObj);
+		
+		if (Properties.TryGetValue("Speed", out object speedObj))
+			settings.Speed = Convert.ToSingle(speedObj);
+		
+		schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
 		return gameObject;
 	}
 }

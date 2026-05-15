@@ -82,4 +82,61 @@ public static class StructExtensions
 		vector = new Vector3(xValue, yValue, zValue);
 		return true;
 	}
+	
+	public static byte ParseByte(this string value)
+	{
+		if (byte.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out byte result))
+			return result;
+		return 0;
+	}
+
+	public static bool ParseBool(this string value)
+	{
+		if (bool.TryParse(value, out bool boolValue))
+			return boolValue;
+
+		if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
+			return intValue != 0;
+
+		return false;
+	}
+
+	public static int ParseInt(this string value)
+	{
+		if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
+			return intValue;
+
+		return 0;
+	}
+
+	public static float ParseFloat(this string value)
+	{
+		if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatValue))
+			return floatValue;
+
+		return 0f;
+	}
+
+	public static Vector3 ParseVector3(this string value)
+	{
+		if (value.Contains(':'))
+		{
+			var parts = value.Split(':');
+			float x = parts.Length > 0 && float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture,
+				out float px)
+				? px
+				: 0f;
+			float y = parts.Length > 1 && float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture,
+				out float py)
+				? py
+				: 0f;
+			float z = parts.Length > 2 && float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture,
+				out float pz)
+				? pz
+				: 0f;
+			return new Vector3(x, y, z);
+		}
+
+		return Vector3.zero;
+	}
 }

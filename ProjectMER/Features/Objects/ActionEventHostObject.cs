@@ -16,7 +16,7 @@ using TextToy = AdminToys.TextToy;
 
 namespace ProjectMER.Features.Objects;
 
-public class ActionEventHostObject
+public sealed class ActionEventHostObject
 {
     public static Action<SchematicObject, ActionGame> OnAudioAction;
     
@@ -192,15 +192,15 @@ public class ActionEventHostObject
                 break;
 
             case AnimatorControllerParameterType.Bool:
-                animator.SetBool(paramHash, ParseBool(action.Value));
+                animator.SetBool(paramHash, action.Value.ParseBool());
                 break;
 
             case AnimatorControllerParameterType.Int:
-                animator.SetInteger(paramHash, ParseInt(action.Value));
+                animator.SetInteger(paramHash, action.Value.ParseInt());
                 break;
 
             case AnimatorControllerParameterType.Float:
-                animator.SetFloat(paramHash, ParseFloat(action.Value));
+                animator.SetFloat(paramHash, action.Value.ParseFloat());
                 break;
 
             default:
@@ -239,9 +239,15 @@ public class ActionEventHostObject
         {
             if (targetObj.TryGetComponent<AdminToyBase>(out var value))
             {
-                value.NetworkMovementSmoothing = ParseByte(action.Value);
+                value.NetworkMovementSmoothing = action.Value.ParseByte();
             }
 
+            return;
+        }
+
+        if (action.BlockType == BlockType.AudioPlayer)
+        {
+            OnAudioAction?.Invoke(_schematic, action);
             return;
         }
 
@@ -255,7 +261,7 @@ public class ActionEventHostObject
                 {
                     case nameof(PrimitiveFlags.Visible):
                     {
-                        if (ParseBool(action.Value))
+                        if (action.Value.ParseBool())
                             primitive.NetworkPrimitiveFlags |= PrimitiveFlags.Visible;
                         else
                             primitive.NetworkPrimitiveFlags &= ~PrimitiveFlags.Visible;
@@ -263,7 +269,7 @@ public class ActionEventHostObject
                     }
                     case nameof(PrimitiveFlags.Collidable):
                     {
-                        if (ParseBool(action.Value))
+                        if (action.Value.ParseBool())
                             primitive.NetworkPrimitiveFlags |= PrimitiveFlags.Collidable;
                         else
                             primitive.NetworkPrimitiveFlags &= ~PrimitiveFlags.Collidable;
@@ -286,29 +292,29 @@ public class ActionEventHostObject
                         lightSourceToy.NetworkLightType = Enum.Parse<LightType>(action.Value, true);
                         break;
                     case "Intensity":
-                        lightSourceToy.NetworkLightIntensity = ParseFloat(action.Value);
+                        lightSourceToy.NetworkLightIntensity = action.Value.ParseFloat();
                         break;
                     case "Range":
-                        lightSourceToy.NetworkLightRange = ParseFloat(action.Value);
+                        lightSourceToy.NetworkLightRange = action.Value.ParseFloat();
                         break;
                     case "ShadowStrength":
-                        lightSourceToy.NetworkShadowStrength = ParseFloat(action.Value);
+                        lightSourceToy.NetworkShadowStrength = action.Value.ParseFloat();
                         break;
                     case nameof(LightShadows):
                         lightSourceToy.NetworkShadowType = Enum.Parse<LightShadows>(action.Value, true);
                         break;
                     case "SpotAngle":
-                        lightSourceToy.NetworkSpotAngle = ParseFloat(action.Value);
+                        lightSourceToy.NetworkSpotAngle = action.Value.ParseFloat();
                         break;
                     case "InnerSpotAngle":
-                        lightSourceToy.NetworkInnerSpotAngle = ParseFloat(action.Value);
+                        lightSourceToy.NetworkInnerSpotAngle = action.Value.ParseFloat();
                         break;
                     case nameof(Color):
                         lightSourceToy.NetworkLightColor = action.Value.GetColorFromString();
                         break;
                     case "Flicker":
                         flicker = lightSourceToy.GetComponent<FlickerController>();
-                        var enableFlicker = ParseBool(action.Value);
+                        var enableFlicker = action.Value.ParseBool();
                         if (enableFlicker && flicker == null)
                         {
                             flicker = lightSourceToy.gameObject.AddComponent<FlickerController>();
@@ -340,10 +346,10 @@ public class ActionEventHostObject
                             Enum.Parse<InvisibleInteractableToy.ColliderShape>(action.Value, true);
                         break;
                     case "InteractionDuration":
-                        interactable.NetworkInteractionDuration = ParseFloat(action.Value);
+                        interactable.NetworkInteractionDuration = action.Value.ParseFloat();
                         break;
                     case "IsLocked":
-                        interactable.IsLocked = ParseBool(action.Value);
+                        interactable.IsLocked = action.Value.ParseBool();
                         break;
                     case nameof(ActionInteractableToy.Permissions):
                         if (!ActionInteractableToy.Instances.TryGetValue(InteractableToy.Get(interactable), out var actionInteractableToy))
@@ -353,7 +359,7 @@ public class ActionEventHostObject
                     case nameof(ActionInteractableToy.RequireAll):
                         if (!ActionInteractableToy.Instances.TryGetValue(InteractableToy.Get(interactable), out actionInteractableToy))
                             break;
-                        actionInteractableToy.RequireAll = ParseBool(action.Value);
+                        actionInteractableToy.RequireAll = action.Value.ParseBool();
                         break;
                 }
 
@@ -369,13 +375,13 @@ public class ActionEventHostObject
                             Enum.Parse<DoorPermissionFlags>(action.Value, true);
                         break;
                     case "RequireAll":
-                        doorVariant.RequiredPermissions.RequireAll = ParseBool(action.Value);
+                        doorVariant.RequiredPermissions.RequireAll = action.Value.ParseBool();
                         break;
                     case "IsLocked":
-                        doorVariant.ServerChangeLock(DoorLockReason.SpecialDoorFeature, ParseBool(action.Value));
+                        doorVariant.ServerChangeLock(DoorLockReason.SpecialDoorFeature, action.Value.ParseBool());
                         break;
                     case "IsOpen":
-                        doorVariant.NetworkTargetState = ParseBool(action.Value);
+                        doorVariant.NetworkTargetState = action.Value.ParseBool();
                         break;
                 }
 
@@ -390,7 +396,7 @@ public class ActionEventHostObject
                         textToy.Network_textFormat = action.Value;
                         break;
                     case "DisplaySize":
-                        textToy.Network_displaySize = ParseVector3(action.Value);
+                        textToy.Network_displaySize = action.Value.ParseVector3();
                         break;
                 }
 
@@ -444,63 +450,6 @@ public class ActionEventHostObject
         int hash = Animator.StringToHash(paramName);
         _animParamHashCache[paramName] = hash;
         return hash;
-    }
-
-    private static byte ParseByte(string value)
-    {
-        if (byte.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out byte result))
-            return result;
-        return 0;
-    }
-
-    private static bool ParseBool(string value)
-    {
-        if (bool.TryParse(value, out bool boolValue))
-            return boolValue;
-
-        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
-            return intValue != 0;
-
-        return false;
-    }
-
-    private static int ParseInt(string value)
-    {
-        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int intValue))
-            return intValue;
-
-        return 0;
-    }
-
-    private static float ParseFloat(string value)
-    {
-        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatValue))
-            return floatValue;
-
-        return 0f;
-    }
-
-    private static Vector3 ParseVector3(string value)
-    {
-        if (value.Contains(':'))
-        {
-            var parts = value.Split(':');
-            float x = parts.Length > 0 && float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture,
-                out float px)
-                ? px
-                : 0f;
-            float y = parts.Length > 1 && float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture,
-                out float py)
-                ? py
-                : 0f;
-            float z = parts.Length > 2 && float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture,
-                out float pz)
-                ? pz
-                : 0f;
-            return new Vector3(x, y, z);
-        }
-
-        return Vector3.zero;
     }
 
     private List<ActionEventList> _actionEvents = [];

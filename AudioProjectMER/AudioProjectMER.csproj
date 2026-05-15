@@ -36,6 +36,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <ItemGroup>
+      <Compile Include="ActionHandler.cs" />
       <Compile Include="AudioHandler.cs" />
       <Compile Include="Factories\MpegStreamFactory.cs" />
       <Compile Include="Factories\NLayerSupport.cs" />

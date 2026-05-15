@@ -1,6 +1,6 @@
 namespace ProjectMER.Features.Actions;
 
-public class ActionEventList
+public sealed class ActionEventList
 {
 	public string Id { get; set; } = string.Empty;
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ProjectMER.Features.Actions;
 
-public class ActionGame
+public sealed class ActionGame
 {
 	public ActionType Type { get; set; }
 	public float ActionDelay { get; set; }

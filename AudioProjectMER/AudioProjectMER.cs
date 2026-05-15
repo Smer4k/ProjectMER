@@ -4,6 +4,7 @@ using AudioProjectMER.Factories;
 using LabApi.Features;
 using LabApi.Features.Console;
 using LabApi.Loader.Features.Plugins;
+using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Objects;
 using SecretLabNAudio.Core.FileReading;
 
@@ -12,7 +13,7 @@ namespace AudioProjectMER;
 public sealed class AudioProjectMER : Plugin<Config>
 {
     public override string Name { get; } = "AudioProjectMER";
-    public override string Description { get; } = "Audio for ProjectMER";
+    public override string Description { get; } = "Audio module for ProjectMER";
     public override string Author { get; } = "Smer4k";
     public override Version Version { get; } = new Version("1.0.0");
     public override Version RequiredApiVersion { get; } = LabApiProperties.CurrentVersion;
@@ -48,12 +49,14 @@ public sealed class AudioProjectMER : Plugin<Config>
         NLayerSupport.RegisterFactory();
         NVorbisSupport.RegisterFactory();
         ShortClipCache.AddAllFromDirectory(ShortClipsPath);
-        ActionEventHostObject.OnAudioAction += AudioHandler.OnAudioAction;
+        ActionEventHostObject.OnAudioAction += ActionHandler.OnAudioAction;
+        Schematic.SchematicSpawned += ActionHandler.OnSchematicSpawned;
     }
 
     public override void Disable()
     {
-        ActionEventHostObject.OnAudioAction -= AudioHandler.OnAudioAction;
+        ActionEventHostObject.OnAudioAction -= ActionHandler.OnAudioAction;
+        Schematic.SchematicSpawned -= ActionHandler.OnSchematicSpawned;
         Singleton = null;
     }
 }
