@@ -1,6 +1,5 @@
 using System.Globalization;
 using AdminToys;
-using CommandSystem.Commands.Shared;
 using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
 using MapGeneration;
@@ -19,6 +18,8 @@ namespace ProjectMER.Features.Objects;
 
 public class ActionEventHostObject
 {
+    public static Action<SchematicObject, ActionGame> OnAudioAction;
+    
     public ActionEventHostObject(SchematicObject schematic, int hostObjectId)
     {
         _schematic = schematic;
@@ -197,7 +198,13 @@ public class ActionEventHostObject
 
     private void ExecuteAudioAction(ActionGame action)
     {
-        Logger.Warn($"Audio action is not implemented for runtime yet. Value: '{action.Value}'.");
+        var handler = OnAudioAction;
+        if (handler == null)
+        {
+            Logger.Warn("[AudioAction] Audio action skipped: no handler for audio action.");
+            return;
+        }
+        handler(_schematic, action);
     }
 
     private void ExecuteSetComponentPropertyAction(ActionGame action)

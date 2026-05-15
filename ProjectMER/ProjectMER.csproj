@@ -17,55 +17,55 @@
 
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\DLL\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
+      <HintPath>..\..\..\DLL\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\DLL\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\DLL\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="CommandSystem.Core">
-      <HintPath>..\..\DLL\CommandSystem.Core.dll</HintPath>
+      <HintPath>..\..\..\DLL\CommandSystem.Core.dll</HintPath>
     </Reference>
     <Reference Include="Exiled.API" Condition=" '$(Configuration)|$(Platform)' == 'Exiled|x64' ">
-      <HintPath>..\..\DLL\EXILED\Exiled.API.dll</HintPath>
+      <HintPath>..\..\..\DLL\EXILED\Exiled.API.dll</HintPath>
     </Reference>
     <Reference Include="Exiled.CustomItems" Condition=" '$(Configuration)|$(Platform)' == 'Exiled|x64' ">
-      <HintPath>..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
+      <HintPath>..\..\..\DLL\EXILED\Exiled.CustomItems.dll</HintPath>
     </Reference>
     <Reference Include="LabApi">
-      <HintPath>..\..\DLL\LabApi.dll</HintPath>
+      <HintPath>..\..\..\DLL\LabApi.dll</HintPath>
     </Reference>
     <Reference Include="Mirror">
-      <HintPath>..\..\DLL\Mirror.dll</HintPath>
+      <HintPath>..\..\..\DLL\Mirror.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
-      <HintPath>..\Plugins\dependencies\mscorlib.dll</HintPath>
+      <HintPath>..\..\..\DLL\mscorlib.dll</HintPath>
     </Reference>
     <Reference Include="NorthwoodLib">
-      <HintPath>..\..\DLL\NorthwoodLib.dll</HintPath>
+      <HintPath>..\..\..\DLL\NorthwoodLib.dll</HintPath>
     </Reference>
     <Reference Include="Pooling">
-      <HintPath>..\..\DLL\Pooling.dll</HintPath>
+      <HintPath>..\..\..\DLL\Pooling.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\DLL\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>..\..\..\DLL\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\DLL\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\DLL\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>..\..\DLL\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>..\..\..\DLL\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>..\..\DLL\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>..\..\..\DLL\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\DLL\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\DLL\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\DLL\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\DLL\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="YamlDotNet">
-      <HintPath>..\..\DLL\YamlDotNet.dll</HintPath>
+      <HintPath>..\..\..\DLL\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
 
