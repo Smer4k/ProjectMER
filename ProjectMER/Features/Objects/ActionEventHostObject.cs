@@ -169,8 +169,21 @@ public class ActionEventHostObject
             animator.speed = 1;
             return;
         }
+        
+        var targetName = action.Param;
+        var split = action.Param.Split('/');
 
-        int paramHash = GetAnimatorParamHash(action.Param);
+        if (split.Length > 1)
+        {
+            if (split[0] == "Animation")
+            {
+                animator.Play(split[1]);
+                return;
+            }
+            targetName = split[1];
+        }
+        
+        int paramHash = GetAnimatorParamHash(targetName);
 
         switch (action.ParamType)
         {
