@@ -26,7 +26,8 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 
 **More support can be found on a [Discord](https://discord.gg/JwAfeSd79u) server**
 
-# New in the fork:
+# New in the fork
+
 - Waypoints are fixed
 - Added all objects from AdminToys, Doors, MirrorObjects, Clutter, PlayerBlocker, CullingParent and Trigger for schematics in Unity
 - Actions for Trigger and Interactable (as in AMERT, but more simplified and less functional)
@@ -38,6 +39,13 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 - It is possible to spawn a schematic from another path (for plugins)
 - New parameters Flicker and FlickerZone have been added for light sources, they make light sources react to the power outages in the room and Scp 2176
 - You can edit the MovementSmoothing parameter for each object (responsible for the smooth movement of the object locally for the player)
+- AudioPlayer - plays a sound/music (need AudioProjectMER or other plugin to work)
+
+# AudioProjectMER
+AudioProjectMER is a plugin that allows you to play music/sounds in the game. It is required for the AudioPlayer object to work.
+
+**Required dependencies:**
+- [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio)
 
 # Credits
 - Plugin made by [Michal78900](https://github.com/Michal78900)
