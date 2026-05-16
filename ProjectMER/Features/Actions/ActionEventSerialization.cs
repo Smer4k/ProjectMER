@@ -378,7 +378,7 @@ public static class ActionEventSerialization
 
 		try
 		{
-			return (ActionType)Convert.ToByte(value, CultureInfo.InvariantCulture);
+			return (ActionType)Convert.ToInt32(value, CultureInfo.InvariantCulture);
 		}
 		catch
 		{

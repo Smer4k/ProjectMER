@@ -75,7 +75,7 @@ public sealed class ActionEventHostObject
         _actionEvents = actionEvents ?? [];
         ActionsByEventId.Clear();
         _animatorByObjectIdCache.Clear();
-        _animParamHashCache.Clear();
+        _animStringHashCache.Clear();
 
         ActionsByEventId.AddRange(ActionEventSerialization.BuildEventDictionary(_actionEvents));
     }
@@ -172,16 +172,15 @@ public sealed class ActionEventHostObject
 
         if (split.Length > 1)
         {
+            targetName = split[1];
             if (split[0] == "Animation")
             {
-                animator.Play(split[1]);
+                animator.Play(GetAnimatorStringHash(targetName));
                 return;
             }
-            targetName = split[1];
         }
         
-        int paramHash = GetAnimatorParamHash(targetName);
-
+        int paramHash = GetAnimatorStringHash(targetName);
         switch (action.ParamType)
         {
             case AnimatorControllerParameterType.Trigger:
@@ -428,13 +427,13 @@ public sealed class ActionEventHostObject
         return targetAnimator;
     }
 
-    private int GetAnimatorParamHash(string paramName)
+    private int GetAnimatorStringHash(string paramName)
     {
-        if (_animParamHashCache.TryGetValue(paramName, out int cachedHash))
+        if (_animStringHashCache.TryGetValue(paramName, out int cachedHash))
             return cachedHash;
 
         int hash = Animator.StringToHash(paramName);
-        _animParamHashCache[paramName] = hash;
+        _animStringHashCache[paramName] = hash;
         return hash;
     }
 
@@ -442,5 +441,5 @@ public sealed class ActionEventHostObject
     private readonly SchematicObject _schematic;
     private readonly int _hostObjectId;
     private readonly Dictionary<int, Animator> _animatorByObjectIdCache = [];
-    private readonly Dictionary<string, int> _animParamHashCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _animStringHashCache = new(StringComparer.Ordinal);
 }

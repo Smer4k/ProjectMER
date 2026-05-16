@@ -1,6 +1,6 @@
 namespace ProjectMER.Features.Actions;
 
-public enum ActionType : byte
+public enum ActionType
 {
 	Command = 0,
 	Animation = 1,
