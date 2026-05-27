@@ -44,12 +44,12 @@ public static class ToolGunUI
 		}
 
 		foreach (string property in properties.GetColoredProperties(instance))
-			{
-				sb.Append($"<size=50%>");
-				sb.Append(property);
-				sb.Append("</size>");
-				sb.AppendLine();
-			}
+		{
+			sb.Append($"<size=50%>");
+			sb.Append(property);
+			sb.Append("</size>");
+			sb.AppendLine();
+		}
 
 		if (offset > 0)
 			sb.AppendLine();
@@ -129,7 +129,12 @@ public static class ToolGunUI
 	private static string GetRoomString(Player player)
 	{
 		Room room = RoomExtensions.GetRoomAtPosition(player.Camera.transform.position);
-		List<Room> list = ListPool<Room>.Shared.Rent(Room.List.Where(x => x.Base != null && x.Zone == room.Zone && x.Shape == room.Shape && x.Name == room.Name));
+		ExtendedRoomName name = room.GetExtendedRoomName();
+		List<Room> list = ListPool<Room>.Shared.Rent(Room.List.Where(
+			x => x.Base != null 
+			     && x.Zone == room.Zone 
+			     && x.Shape == room.Shape 
+			     && x.GetExtendedRoomName() == name));
 
 		string roomString;
 		if (list.Count == 1)
