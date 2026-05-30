@@ -386,6 +386,17 @@ public sealed class ActionEventHostObject
                 }
 
                 break;
+            case BlockType.Trigger:
+                var trigger = targetObj.GetComponent<TriggerObject>();
+                if (trigger == null)
+                    break;
+                switch (action.Param)
+                {
+                    case "TargetType":
+                        trigger.TargetType = Enum.Parse<TriggerTargetType>(action.Value, true);
+                        break;
+                }
+                break;
             default:
                 Logger.Warn($"Not Implemented for blockType: {action.BlockType}");
                 break;
