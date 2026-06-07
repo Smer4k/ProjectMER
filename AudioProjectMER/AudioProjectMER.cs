@@ -48,7 +48,6 @@ public sealed class AudioProjectMER : Plugin<Config>
         
         NLayerSupport.RegisterFactory();
         NVorbisSupport.RegisterFactory();
-        ShortClipCache.AddAllFromDirectory(ShortClipsPath);
         ActionEventHostObject.OnAudioAction += ActionHandler.OnAudioAction;
         Schematic.SchematicSpawned += ActionHandler.OnSchematicSpawned;
     }

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProjectMER.Features.Serializable;
 using SecretLabNAudio.Core;
 using SecretLabNAudio.Core.Extensions;
 using SecretLabNAudio.Core.Extensions.Processors;
+using SecretLabNAudio.Core.FileReading;
 using SecretLabNAudio.Core.Pools;
 using SecretLabNAudio.Core.Processors;
 using SecretLabNAudio.Core.Providers;
@@ -18,6 +20,10 @@ public class AudioHandler : MonoBehaviour
     public AudioPlayerSettings Settings;
     public AudioPlayer AudioPlayer;
     public SpeedChangingSampleProvider SpeedChangingSampleProvider;
+    private static readonly HashSet<string> SupportedAudioExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".aiff", ".mp3", ".wav", ".ogg"
+    };
 
     private void CreateAudioPlayer()
     {
@@ -37,54 +43,30 @@ public class AudioHandler : MonoBehaviour
         {
             CreateAudioPlayer();
         }
-        
+
         SetPause(false);
 
         if (Settings.IsShortClip)
         {
-            AudioPlayer.UseShortClip(Settings.FileName, Settings.Loop);
+            var clipName = new ClipName(Settings.FileName);
+            if (!ShortClipCache.TryGet(clipName, out _))
+            {
+                var fullPath = ResolveAudioPath(AudioProjectMER.ShortClipsPath);
+                if (fullPath == null)
+                    return;
+                ShortClipCache.AddFromFile(fullPath);
+            }
+
+            AudioPlayer.UseShortClip(clipName, Settings.Loop);
         }
         else
         {
-            var fullPath = Path.Combine(AudioProjectMER.ClipsPath, Settings.FileName);
-            if (!Path.HasExtension(Settings.FileName))
-            {
-                Logger.Warn($"The file named \"{Settings.FileName}\" does not contain an extension. Trying to find the file... (Add the file extension to the schematic for optimization!)");
-                if (!Directory.Exists(AudioProjectMER.ClipsPath))
-                {
-                    Logger.Warn($"Directory {AudioProjectMER.ClipsPath} does not exist");
-                    return;
-                }
-                string[] matches = Directory.GetFiles(AudioProjectMER.ClipsPath, $"{Settings.FileName}.*", SearchOption.TopDirectoryOnly);
-                if (matches.Length > 0)
-                {
-                    fullPath = matches.FirstOrDefault(f =>
-                    {
-                        var extension = Path.GetExtension(f);
-                        switch (extension)
-                        {
-                            case ".aiff":
-                            case ".mp3":
-                            case ".wav":
-                            case ".ogg":
-                                return true;
-                            default:
-                                return false;
-                        }
-                    }) ?? matches[0];
-                    Settings.FileName = Path.GetFileName(fullPath);
-                    Logger.Info($"File found: {Settings.FileName}");
-                }
-                else
-                {
-                    Logger.Warn($"Audio File \"{Settings.FileName}\" not found");
-                    return;
-                }
-            }
-            
+            var fullPath = ResolveAudioPath(AudioProjectMER.ClipsPath);
+            if (fullPath == null)
+                return;
             AudioPlayer.UseFileSafe(fullPath, Settings.Loop);
         }
-        
+
         if (AudioPlayer.SampleProvider == null)
             return;
         AudioPlayer.OwnsProvider = false;
@@ -92,6 +74,35 @@ public class AudioHandler : MonoBehaviour
         SpeedChangingSampleProvider = (SpeedChangingSampleProvider)chain.Master;
         AudioPlayer.SampleProvider = chain;
         AudioPlayer.OwnsProvider = true;
+    }
+
+    private string ResolveAudioPath(string basePath)
+    {
+        if (Path.HasExtension(Settings.FileName))
+            return Path.Combine(basePath, Settings.FileName);
+
+        Logger.Warn(
+            $"The file named \"{Settings.FileName}\" does not contain an extension. Trying to find the file... (Add the file extension to the schematic for optimization!)");
+
+        if (!Directory.Exists(basePath))
+        {
+            Logger.Warn($"Directory {basePath} does not exist");
+            return null;
+        }
+
+        var matches = Directory.GetFiles(basePath, $"{Settings.FileName}.*", SearchOption.TopDirectoryOnly);
+        if (matches.Length == 0)
+        {
+            Logger.Warn($"Audio File \"{Settings.FileName}\" not found");
+            return null;
+        }
+
+        var fullPath = matches.FirstOrDefault(f => SupportedAudioExtensions.Contains(Path.GetExtension(f))) ??
+                       matches[0];
+
+        Settings.FileName = Path.GetFileName(fullPath);
+        Logger.Info($"File found: {Settings.FileName}");
+        return fullPath;
     }
 
     public void SetFileName(string fileName)
