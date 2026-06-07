@@ -15,7 +15,7 @@ public sealed class AudioProjectMER : Plugin<Config>
     public override string Name { get; } = "AudioProjectMER";
     public override string Description { get; } = "Audio module for ProjectMER";
     public override string Author { get; } = "Smer4k";
-    public override Version Version { get; } = new Version("1.0.0");
+    public override Version Version { get; } = new Version("1.0.1");
     public override Version RequiredApiVersion { get; } = LabApiProperties.CurrentVersion;
     
     public static AudioProjectMER Singleton { get; private set; }
