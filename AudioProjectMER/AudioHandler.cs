@@ -87,9 +87,11 @@ public class AudioHandler : MonoBehaviour
         
         if (AudioPlayer.SampleProvider == null)
             return;
+        AudioPlayer.OwnsProvider = false;
         ProcessorChain chain = AudioPlayer.SampleProvider.ToCompatibleChain().Speed(Settings.Speed);
         SpeedChangingSampleProvider = (SpeedChangingSampleProvider)chain.Master;
         AudioPlayer.SampleProvider = chain;
+        AudioPlayer.OwnsProvider = true;
     }
 
     public void SetFileName(string fileName)
