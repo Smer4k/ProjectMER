@@ -14,10 +14,15 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
     /// Gets or sets the <see cref="UnityEngine.PrimitiveType"/>.
     /// </summary>
     public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Cube;
-    
+
+    public bool ItemsAllowed { get; set; } = true;
+    public bool BulletsAllowed { get; set; } = true;
+
     public override GameObject SpawnOrUpdateObject(Room? room = null, GameObject? instance = null)
     {
-        PrimitiveObjectToy primitive = instance == null ? UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject) : instance.GetComponent<PrimitiveObjectToy>();
+        PrimitiveObjectToy primitive = instance == null
+            ? UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject)
+            : instance.GetComponent<PrimitiveObjectToy>();
         Vector3 position = room.GetAbsolutePosition(Position);
         Quaternion rotation = room.GetAbsoluteRotation(Rotation);
         _prevIndex = Index;
@@ -27,9 +32,25 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
         primitive.NetworkMovementSmoothing = 60;
 
         primitive.NetworkPrimitiveType = PrimitiveType;
-        primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+        if (ItemsAllowed && BulletsAllowed)
+        {
+            primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+        }
+        else if (ItemsAllowed)
+        {
+            primitive.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+        }
+        else if (BulletsAllowed)
+        {
+            primitive.gameObject.layer = LayerMask.NameToLayer("Fence");
+        }
+        else
+        {
+            primitive.gameObject.layer = LayerMask.NameToLayer("Default");
+        }
+
         primitive.NetworkPrimitiveFlags = PrimitiveFlags.Collidable;
-        
+
         if (instance == null)
             NetworkServer.Spawn(primitive.gameObject);
 
@@ -38,26 +59,43 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
 
     public GameObject SpawnOrUpdateIndicator(Room room, GameObject? instance = null)
     {
-	    PrimitiveObjectToy root;
-		Vector3 position = room.GetAbsolutePosition(Position);
-		Quaternion rotation = room.GetAbsoluteRotation(Rotation);
+        PrimitiveObjectToy root;
+        Vector3 position = room.GetAbsolutePosition(Position);
+        Quaternion rotation = room.GetAbsoluteRotation(Rotation);
 
-		if (instance == null)
-		{
-			root = UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject);
-			root.NetworkPrimitiveFlags = PrimitiveFlags.Visible;
-			root.NetworkMaterialColor = new Color(1, 0, 0, 0.5f);
-		}
-		else
-		{
-			root = instance.GetComponent<PrimitiveObjectToy>();
-		}
-		
-		root.NetworkPrimitiveType = PrimitiveType;
-		root.transform.position = position;
-		root.transform.rotation = rotation;
-		root.transform.localScale = Scale;
+        if (instance == null)
+        {
+            root = UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject);
+            root.NetworkPrimitiveFlags = PrimitiveFlags.Visible;
+            root.NetworkMaterialColor = new Color(1, 0, 0, 0.5f);
+        }
+        else
+        {
+            root = instance.GetComponent<PrimitiveObjectToy>();
+        }
 
-		return root.gameObject;
+        root.NetworkPrimitiveType = PrimitiveType;
+        root.transform.position = position;
+        root.transform.rotation = rotation;
+        root.transform.localScale = Scale;
+        
+        if (ItemsAllowed && BulletsAllowed)
+        {
+            root.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+        }
+        else if (ItemsAllowed)
+        {
+            root.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+        }
+        else if (BulletsAllowed)
+        {
+            root.gameObject.layer = LayerMask.NameToLayer("Fence");
+        }
+        else
+        {
+            root.gameObject.layer = LayerMask.NameToLayer("Default");
+        }
+
+        return root.gameObject;
     }
 }

@@ -1,6 +1,7 @@
 using AdminToys;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
+using InventorySystem.Items.Firearms.Modules;
 using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MapGeneration;
@@ -488,7 +489,34 @@ public class SchematicBlockData
 		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
 		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
 		primitive.PrimitiveFlags = PrimitiveFlags.Collidable;
-		primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+
+		var itemsAllowed = true;
+		var bulletsAllowed = true;
+		if (Properties.TryGetValue("ItemsAllowed", out object itemsAllowedObj))
+		{
+			itemsAllowed = Convert.ToBoolean(itemsAllowedObj);
+		}
+
+		if (Properties.TryGetValue("BulletsAllowed", out object bulletsAllowedObj))
+		{
+			bulletsAllowed = Convert.ToBoolean(bulletsAllowedObj);
+		}
+		
+		if (itemsAllowed && bulletsAllowed)
+		{
+			primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+		} else if (itemsAllowed)
+		{
+			primitive.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+		} else if (bulletsAllowed)
+		{
+			primitive.gameObject.layer = LayerMask.NameToLayer("Fence");
+		}
+		else
+		{
+			primitive.gameObject.layer = LayerMask.NameToLayer("Default");
+		}
+		
 		return primitive.gameObject;
 	}
 
