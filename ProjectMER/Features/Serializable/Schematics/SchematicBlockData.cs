@@ -487,7 +487,9 @@ public class SchematicBlockData
 	private GameObject CreatePlayerBlocker()
 	{
 		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
-		primitive.NetworkPrimitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
+		
+		primitive.NetworkPrimitiveType = primitiveType;
 		primitive.PrimitiveFlags = PrimitiveFlags.Collidable;
 
 		var itemsAllowed = true;
@@ -507,7 +509,14 @@ public class SchematicBlockData
 			primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
 		} else if (itemsAllowed)
 		{
-			primitive.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+			primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
+			PrimitiveObjectToy hitBox = GameObject.Instantiate(PrefabManager.PrimitiveObject, primitive.transform);
+			hitBox.NetworkPrimitiveType = primitiveType;
+			hitBox.PrimitiveFlags = PrimitiveFlags.Collidable;
+			hitBox.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+			hitBox.transform.localPosition = Vector3.zero;
+			hitBox.transform.localRotation = Quaternion.identity;
+			hitBox.transform.localScale = Vector3.one - new Vector3(0.01f, 0.01f, 0.01f);
 		} else if (bulletsAllowed)
 		{
 			primitive.gameObject.layer = LayerMask.NameToLayer("Fence");
