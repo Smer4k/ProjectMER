@@ -95,8 +95,8 @@ public class ToolGunItem
 		return true;
 	}
 
-	public static bool Remove(Player player)
-	{
+    public static bool Remove(Player player)
+    {
         foreach (ItemBase itemBase in player.Inventory.UserInventory.Items.Values)
         {
             if (ItemDictionary.ContainsKey(itemBase.ItemSerial))
@@ -104,19 +104,19 @@ public class ToolGunItem
                 ItemDictionary.Remove(itemBase.ItemSerial);
                 player.RemoveItem(itemBase);
 
+                ServerSpecificSettingBase[] filteredSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: 0 } && x is not SSGroupHeader { Label: "ProjectMER" })];
+
+                ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub, filteredSettings);
+
                 if (ItemDictionary.Count == 0)
-                {
-                    ServerSpecificSettingsSync.DefinedSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: 0 } && x is not SSGroupHeader { Label: "ProjectMER" })];
-                }
-				
-				ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub);
+                    ServerSpecificSettingsSync.DefinedSettings = filteredSettings;
 
                 return true;
             }
         }
 
-		return false;
-	}
+        return false;
+    }
 
 	public bool CreateMode => Firearm.IsEmittingLight && !AdsModule.AdsTarget;
 	public bool DeleteMode => !Firearm.IsEmittingLight && !AdsModule.AdsTarget;
