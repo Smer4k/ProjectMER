@@ -104,8 +104,12 @@ public class ToolGunItem
                 ItemDictionary.Remove(itemBase.ItemSerial);
                 player.RemoveItem(itemBase);
 
-                ServerSpecificSettingsSync.DefinedSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: 0 } && x is not SSGroupHeader { Label: "ProjectMER" })];
-                ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub);
+                if (ItemDictionary.Count == 0)
+                {
+                    ServerSpecificSettingsSync.DefinedSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: 0 } && x is not SSGroupHeader { Label: "ProjectMER" })];
+                }
+				
+				ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub);
 
                 return true;
             }
