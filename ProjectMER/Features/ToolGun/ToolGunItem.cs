@@ -83,28 +83,33 @@ public class ToolGunItem
 		ItemDictionary.Add(toolgun.ItemSerial, new ToolGunItem(toolgun));
 
 		ServerSpecificSettingsSync.SendOnJoinFilter = (_) => false; // Prevent all users from receiving the tools after joining the server.
-		ServerSpecificSettingsSync.DefinedSettings =
-		[
-			new SSGroupHeader("MapEditorReborn"),
-			new SSDropdownSetting(0, "Schematic Name", MapUtils.GetAvailableSchematicNames(), isServerOnly: true)
-		];
 
-		ServerSpecificSettingsSync.SendToPlayersConditionally(x => x.inventory.UserInventory.Items.Values.Any(x => x.IsToolGun(out ToolGunItem _)));
+        List<ServerSpecificSettingBase> settings = ServerSpecificSettingsSync.DefinedSettings?.ToList() ?? [];
+
+        settings.RemoveAll(x => x is SSDropdownSetting { SettingId: 0 } || x is SSGroupHeader { Label: "ProjectMER" }); //ids are sill 0 can conflict with other plugins any way we can prevent that?
+        settings.AddRange([new SSGroupHeader("ProjectMER"), new SSDropdownSetting(0, "Schematic Name", MapUtils.GetAvailableSchematicNames())]);
+
+        ServerSpecificSettingsSync.DefinedSettings = [.. settings];
+        ServerSpecificSettingsSync.SendToPlayersConditionally(x => x.inventory.UserInventory.Items.Values.Any(x => x.IsToolGun(out ToolGunItem _)));
 
 		return true;
 	}
 
 	public static bool Remove(Player player)
 	{
-		foreach (ItemBase itemBase in player.Inventory.UserInventory.Items.Values)
-		{
-			if (ItemDictionary.ContainsKey(itemBase.ItemSerial))
-			{
-				ItemDictionary.Remove(itemBase.ItemSerial);
-				player.RemoveItem(itemBase);
-				return true;
-			}
-		}
+        foreach (ItemBase itemBase in player.Inventory.UserInventory.Items.Values)
+        {
+            if (ItemDictionary.ContainsKey(itemBase.ItemSerial))
+            {
+                ItemDictionary.Remove(itemBase.ItemSerial);
+                player.RemoveItem(itemBase);
+
+                ServerSpecificSettingsSync.DefinedSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: 0 } && x is not SSGroupHeader { Label: "ProjectMER" })];
+                ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub);
+
+                return true;
+            }
+        }
 
 		return false;
 	}
@@ -117,8 +122,8 @@ public class ToolGunItem
 	{
 		if (CreateMode)
 		{
-			ServerSpecificSettingsSync.TryGetSettingOfUser(player.ReferenceHub, 0, out SSDropdownSetting dropdownSetting);
-			dropdownSetting.TryGetSyncSelectionText(out string schematicName);
+			if (!ServerSpecificSettingsSync.TryGetSettingOfUser(player.ReferenceHub, 0, out SSDropdownSetting dropdownSetting) || !dropdownSetting.TryGetSyncSelectionText(out string schematicName))
+				return;
 
 			ToolGunHandler.CreateObject(player, SelectedObjectToSpawn, schematicName);
 			return;
