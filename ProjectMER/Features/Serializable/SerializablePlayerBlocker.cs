@@ -97,19 +97,6 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
         root.transform.position = position;
         root.transform.rotation = rotation;
         root.transform.localScale = Scale;
-        
-        if (ItemsAllowed && BulletsAllowed || ItemsAllowed)
-        {
-            root.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-        }
-        else if (BulletsAllowed)
-        {
-            root.gameObject.layer = LayerMask.NameToLayer("Fence");
-        }
-        else
-        {
-            root.gameObject.layer = LayerMask.NameToLayer("Default");
-        }
 
         return root.gameObject;
     }
