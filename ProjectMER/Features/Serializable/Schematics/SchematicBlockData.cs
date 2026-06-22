@@ -10,6 +10,7 @@ using MEC;
 using Mirror;
 using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
+using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
@@ -232,9 +233,81 @@ public class SchematicBlockData
 				return light.gameObject;
 			var flicker = light.gameObject.AddComponent<FlickerController>();
 			flicker.AddSchematic(schematicObject);
-			if (Properties.TryGetValue("FlickerZone", out var flickerZone))
+			if (Properties.TryGetValue("FlickerZone", out var obj))
 			{
-				flicker.Zone = (FacilityZone)Convert.ToInt32(flickerZone);
+				flicker.Zone = (FacilityZone)Convert.ToInt32(obj);
+			}
+
+			if (Properties.TryGetValue("Cycle", out obj))
+			{
+				flicker.Cycle = Convert.ToBoolean(obj);
+			}
+			if (Properties.TryGetValue("FileNameOn", out obj))
+			{
+				flicker.FileNameOn = new ActionGame()
+				{
+					TargetId = ObjectId,
+					Param = "FileName",
+					Value = Convert.ToString(obj)
+				};
+			}
+			if (Properties.TryGetValue("FileNameOff", out obj))
+			{
+				flicker.FileNameOff = new ActionGame()
+				{
+					TargetId = ObjectId,
+					Param = "FileName",
+					Value = Convert.ToString(obj)
+				};
+			}
+
+			if (Properties.TryGetValue("RandomInRange", out obj))
+			{
+				flicker.RandomInRange = Convert.ToBoolean(obj);
+			}
+
+			if (flicker.RandomInRange)
+			{
+				if (Properties.TryGetValue("MaxOn", out obj))
+				{
+					flicker.MaxOn = Convert.ToSingle(obj);
+				}
+
+				if (Properties.TryGetValue("MinOn", out obj))
+				{
+					flicker.MinOn = Convert.ToSingle(obj);
+				}
+
+				if (Properties.TryGetValue("MaxOff", out obj))
+				{
+					flicker.MaxOff = Convert.ToSingle(obj);
+				}
+
+				if (Properties.TryGetValue("MinOff", out obj))
+				{
+					flicker.MinOff = Convert.ToSingle(obj);
+				}
+			}
+			else
+			{
+				if (Properties.TryGetValue("TimeToOn", out obj))
+				{
+					flicker.TimeToOn = Convert.ToSingle(obj);
+				}
+
+				if (Properties.TryGetValue("TimeToOff", out obj))
+				{
+					flicker.TimeToOff = Convert.ToSingle(obj);
+				}
+			}
+
+			if (flicker.FileNameOn != null || flicker.FileNameOff != null)
+			{
+				var settings = new AudioPlayerSettings()
+				{
+					IsShortClip = true,
+				};
+				schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
 			}
 		}
 		

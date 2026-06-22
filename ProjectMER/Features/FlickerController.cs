@@ -1,13 +1,15 @@
 ﻿using MapGeneration;
+using MEC;
 using NorthwoodLib.Pools;
-using ProjectMER.Features.Extensions;
+using ProjectMER.Features.Actions;
 using ProjectMER.Features.Objects;
 using UnityEngine;
 using LightSourceToy = AdminToys.LightSourceToy;
+using Random = UnityEngine.Random;
 
 namespace ProjectMER.Features;
 
-public class FlickerController : MonoBehaviour
+public sealed class FlickerController : MonoBehaviour
 {
     public static readonly List<FlickerController> Instances = new();
     public static readonly Dictionary<RoomIdentifier, HashSet<FlickerController>> FlickersByRoom = new();
@@ -18,11 +20,26 @@ public class FlickerController : MonoBehaviour
     public FacilityZone Zone = FacilityZone.None;
     public bool LightEnabled => _lightEnabled;
 
+    public bool Cycle;
+    public ActionGame? FileNameOn = null;
+    public ActionGame? FileNameOff = null;
+
+    public bool RandomInRange;
+    public float TimeToOn;
+    public float TimeToOff;
+
+    public float MaxOn;
+    public float MinOn;
+
+    public float MaxOff;
+    public float MinOff;
+
     private float _prevLightRange;
     private float _flickerDuration;
     private bool _lightEnabled = true;
     private bool _roomAssigned;
     private bool _schematicAssigned;
+    private CoroutineHandle _flickerCoroutine;
 
     public void Start()
     {
@@ -35,10 +52,16 @@ public class FlickerController : MonoBehaviour
         }
 
         Instances.Add(this);
+
+        if (Cycle)
+        {
+            _flickerCoroutine = Timing.RunCoroutine(FlickerCycle());
+        }
     }
-    
+
     public void OnDestroy()
     {
+        Timing.KillCoroutines(_flickerCoroutine);
         Instances.Remove(this);
         if (_roomAssigned && FlickersByRoom.TryGetValue(Room!, out HashSet<FlickerController> flickers))
         {
@@ -48,6 +71,7 @@ public class FlickerController : MonoBehaviour
             {
                 FlickersByRoom.Remove(Room!);
             }
+
             Room = null;
         }
 
@@ -72,6 +96,31 @@ public class FlickerController : MonoBehaviour
         SetLights(true);
     }
 
+    private IEnumerator<float> FlickerCycle()
+    {
+        while (true)
+        {
+            if (_flickerDuration > 0)
+            {
+                yield return Timing.WaitForSeconds(1);
+                continue;
+            }
+
+            var duration = 0f;
+            if (RandomInRange)
+            {
+                duration = _lightEnabled ? Random.Range(MinOff, MaxOff) : Random.Range(MinOn, MaxOn);
+            }
+            else
+            {
+                duration = _lightEnabled ? TimeToOff : TimeToOn;
+            }
+
+            SetLights(!_lightEnabled);
+            yield return Timing.WaitForSeconds(duration);
+        }
+    }
+
     public void ServerFlickerLights(float dur)
     {
         if (dur <= 0.0)
@@ -94,6 +143,8 @@ public class FlickerController : MonoBehaviour
                 return;
             _lightEnabled = true;
             LightSourceToy?.NetworkLightRange = _prevLightRange;
+            if (FileNameOn != null && Schematic != null)
+                ActionEventHostObject.OnAudioAction?.Invoke(Schematic, FileNameOn);
         }
         else
         {
@@ -102,6 +153,8 @@ public class FlickerController : MonoBehaviour
             _lightEnabled = false;
             _prevLightRange = LightSourceToy.NetworkLightRange;
             LightSourceToy?.NetworkLightRange = 0.0f;
+            if (FileNameOff != null && Schematic != null)
+                ActionEventHostObject.OnAudioAction?.Invoke(Schematic, FileNameOff);
         }
     }
 
@@ -158,7 +211,7 @@ public class FlickerController : MonoBehaviour
                 continue;
             }
 
-            if (flicker.Zone != FacilityZone.None) 
+            if (flicker.Zone != FacilityZone.None)
                 continue;
             if (flicker.transform.position.TryGetRoom(out var identifier) && identifier.Zone == zoneToAffect)
                 flicker.ServerFlickerLights(duration);
