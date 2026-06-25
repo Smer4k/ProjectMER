@@ -232,6 +232,7 @@ public class SchematicBlockData
 			if (!Convert.ToBoolean(flickerEnable)) 
 				return light.gameObject;
 			var flicker = light.gameObject.AddComponent<FlickerController>();
+			flicker.ObjectId = ObjectId;
 			flicker.AddSchematic(schematicObject);
 			if (Properties.TryGetValue("FlickerZone", out var obj))
 			{
@@ -242,25 +243,7 @@ public class SchematicBlockData
 			{
 				flicker.Cycle = Convert.ToBoolean(obj);
 			}
-			if (Properties.TryGetValue("FileNameOn", out obj))
-			{
-				flicker.FileNameOn = new ActionGame()
-				{
-					TargetId = ObjectId,
-					Param = "FileName",
-					Value = Convert.ToString(obj)
-				};
-			}
-			if (Properties.TryGetValue("FileNameOff", out obj))
-			{
-				flicker.FileNameOff = new ActionGame()
-				{
-					TargetId = ObjectId,
-					Param = "FileName",
-					Value = Convert.ToString(obj)
-				};
-			}
-
+			
 			if (Properties.TryGetValue("RandomInRange", out obj))
 			{
 				flicker.RandomInRange = Convert.ToBoolean(obj);
@@ -299,15 +282,6 @@ public class SchematicBlockData
 				{
 					flicker.TimeToOff = Convert.ToSingle(obj);
 				}
-			}
-
-			if (flicker.FileNameOn != null || flicker.FileNameOff != null)
-			{
-				var settings = new AudioPlayerSettings()
-				{
-					IsShortClip = true,
-				};
-				schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
 			}
 		}
 		

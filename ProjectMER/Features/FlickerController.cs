@@ -20,10 +20,10 @@ public sealed class FlickerController : MonoBehaviour
     public FacilityZone Zone = FacilityZone.None;
     public bool LightEnabled => _lightEnabled;
 
+    public int ObjectId;
+    
     public bool Cycle;
-    public ActionGame? FileNameOn = null;
-    public ActionGame? FileNameOff = null;
-
+    
     public bool RandomInRange;
     public float TimeToOn;
     public float TimeToOff;
@@ -143,8 +143,8 @@ public sealed class FlickerController : MonoBehaviour
                 return;
             _lightEnabled = true;
             LightSourceToy?.NetworkLightRange = _prevLightRange;
-            if (FileNameOn != null && Schematic != null)
-                ActionEventHostObject.OnAudioAction?.Invoke(Schematic, FileNameOn);
+            if (Schematic != null)
+                Schematic.RunActionsByEventId(ObjectId, "TurnOn");
         }
         else
         {
@@ -153,8 +153,8 @@ public sealed class FlickerController : MonoBehaviour
             _lightEnabled = false;
             _prevLightRange = LightSourceToy.NetworkLightRange;
             LightSourceToy?.NetworkLightRange = 0.0f;
-            if (FileNameOff != null && Schematic != null)
-                ActionEventHostObject.OnAudioAction?.Invoke(Schematic, FileNameOff);
+            if (Schematic != null)
+                Schematic.RunActionsByEventId(ObjectId, "TurnOff");
         }
     }
 
