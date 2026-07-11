@@ -68,6 +68,21 @@ public class GenericEventsHandler : CustomEventsHandler
 		});
 	}
 
+	public override void OnPlayerChangedRole(PlayerChangedRoleEventArgs ev)
+	{
+		foreach (var playerBlocker in PlayerBlockerObject.AllPlayerBlockers)
+		{
+			if (playerBlocker.Roles.Contains(ev.NewRole.RoleTypeId))
+			{
+				playerBlocker.HideForPlayer(ev.Player);
+			}
+			else
+			{
+				playerBlocker.ShowForPlayer(ev.Player);
+			}
+		}
+	}
+
 	public override void OnPlayerInteractingShootingTarget(PlayerInteractingShootingTargetEventArgs ev)
 	{
 		if (ev.ShootingTarget.GameObject.TryGetComponent(out MapEditorObject _))

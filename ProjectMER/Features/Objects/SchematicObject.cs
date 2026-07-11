@@ -143,10 +143,15 @@ public class SchematicObject : MonoBehaviour
 		ActionsByObjectId.Clear();
 
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
-
 		AddRigidbodies();
 		AddAnimators();
-		
+		Timing.CallDelayed(0.1f, () =>
+		{
+			foreach (var playerBlockers in transform.GetComponentsInChildren<PlayerBlockerObject>())
+			{
+				playerBlockers.UpdateVisibility();
+			}
+		});
 		Schematic.OnSchematicSpawned(new(this, Name));
 
 		return this;

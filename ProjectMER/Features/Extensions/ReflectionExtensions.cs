@@ -56,11 +56,15 @@ public static class ReflectionExtensions
 				}
 				yield return $"{property.Name}: <noparse>{StringBuilderPool.Shared.ToStringReturn(sb)}</noparse>";
 			}
-			else if (typeof(ICollection).IsAssignableFrom(property.PropertyType))
+			else if (property.PropertyType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>)))
 			{
 				StringBuilder sb = StringBuilderPool.Shared.Rent();
-				ICollection collection = (ICollection)property.GetValue(instance);
-				Type collectionType = collection.GetType().GetGenericArguments()[0];
+				
+				object collectionInstance = property.GetValue(instance);
+				IEnumerable collection = (IEnumerable)collectionInstance;
+				Type collectionType = collectionInstance.GetType().GetGenericArguments()[0];
+				int count = (int)property.PropertyType.GetProperty("Count")!.GetValue(collectionInstance)!;
+
 				if (collectionType.IsEnum)
 				{
 					foreach (object? item in collection)
@@ -82,7 +86,7 @@ public static class ReflectionExtensions
 				}
 				else
 				{
-					sb.Append($"<color=yellow><b>{collection.Count}</b></color>");
+					sb.Append($"<color=yellow><b>{count}</b></color>");
 				}
 
 				yield return $"{property.Name}: {StringBuilderPool.Shared.ToStringReturn(sb)}";

@@ -1,8 +1,10 @@
 ﻿using AdminToys;
 using LabApi.Features.Wrappers;
 using Mirror;
+using PlayerRoles;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Interfaces;
+using ProjectMER.Features.Objects;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
@@ -17,9 +19,10 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
 
     public bool ItemsAllowed { get; set; } = true;
     public bool BulletsAllowed { get; set; } = true;
-    
-    private PrimitiveObjectToy? _hitBox = null;
-    
+    public HashSet<RoleTypeId> Roles { get; set; } = [];
+
+    private PlayerBlockerObject? _playerBlockerObject = null;
+
     public override GameObject SpawnOrUpdateObject(Room? room = null, GameObject? instance = null)
     {
         PrimitiveObjectToy primitive = instance == null
@@ -34,39 +37,17 @@ public class SerializablePlayerBlocker : SerializableObject, IIndicatorDefinitio
         primitive.NetworkMovementSmoothing = 60;
 
         primitive.NetworkPrimitiveType = PrimitiveType;
-        
-        if (_hitBox != null)
+
+        if (_playerBlockerObject == null)
         {
-            NetworkServer.Destroy(_hitBox.gameObject);
-            _hitBox = null;
+            _playerBlockerObject = primitive.gameObject.AddComponent<PlayerBlockerObject>();
         }
         
-        if (ItemsAllowed && BulletsAllowed)
-        {
-            primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-        }
-        else if (ItemsAllowed)
-        {
-            primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-            if (_hitBox == null)
-            {
-                _hitBox = GameObject.Instantiate(PrefabManager.PrimitiveObject, primitive.transform);
-                _hitBox.NetworkPrimitiveType = PrimitiveType;
-                _hitBox.PrimitiveFlags = PrimitiveFlags.Collidable;
-                _hitBox.gameObject.layer = LayerMask.NameToLayer("Hitbox");
-                _hitBox.transform.SetPositionAndRotation(position, rotation);
-                _hitBox.transform.localScale = Scale - new Vector3(0.01f, 0.01f, 0.01f);
-                NetworkServer.Spawn(_hitBox.gameObject);
-            }
-        }
-        else if (BulletsAllowed)
-        {
-            primitive.gameObject.layer = LayerMask.NameToLayer("Fence");
-        }
-        else
-        {
-            primitive.gameObject.layer = LayerMask.NameToLayer("Default");
-        }
+        _playerBlockerObject.BulletsAllowed = BulletsAllowed;
+        _playerBlockerObject.ItemsAllowed = ItemsAllowed;
+        _playerBlockerObject.Roles = Roles;
+        _playerBlockerObject.UpdateVisibility();
+        _playerBlockerObject.UpdateState();
 
         primitive.NetworkPrimitiveFlags = PrimitiveFlags.Collidable;
 

@@ -297,12 +297,12 @@ public class SchematicBlockData
 #if EXILED
         if (Properties.TryGetValue("CustomItem", out object customItemObj))
         {
-            string? customItemName = customItemObj?.ToString();
+            string customItemName = Convert.ToString(customItemObj);
 
             if (!string.IsNullOrWhiteSpace(customItemName) &&
                 Exiled.CustomItems.API.Features.CustomItem.TryGet(customItemName, out var customItem))
             {
-                var exiledPickup = customItem.Spawn(Vector3.zero);
+                var exiledPickup = customItem!.Spawn(Vector3.zero);
 
                 if (exiledPickup != null)
                 {
@@ -551,27 +551,19 @@ public class SchematicBlockData
 			bulletsAllowed = Convert.ToBoolean(bulletsAllowedObj);
 		}
 		
-		if (itemsAllowed && bulletsAllowed)
+		var playerBlocker = primitive.gameObject.AddComponent<PlayerBlockerObject>();
+		
+		if (Properties.TryGetValue("Roles", out object rolesObj))
 		{
-			primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-		} else if (itemsAllowed)
-		{
-			primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-			PrimitiveObjectToy hitBox = GameObject.Instantiate(PrefabManager.PrimitiveObject, primitive.transform);
-			hitBox.NetworkPrimitiveType = primitiveType;
-			hitBox.PrimitiveFlags = PrimitiveFlags.Collidable;
-			hitBox.gameObject.layer = LayerMask.NameToLayer("Hitbox");
-			hitBox.transform.localPosition = Vector3.zero;
-			hitBox.transform.localRotation = Quaternion.identity;
-			hitBox.transform.localScale = Vector3.one - new Vector3(0.01f, 0.01f, 0.01f);
-		} else if (bulletsAllowed)
-		{
-			primitive.gameObject.layer = LayerMask.NameToLayer("Fence");
+			foreach (var role in (List<object>)rolesObj)
+			{
+				playerBlocker.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+			}
 		}
-		else
-		{
-			primitive.gameObject.layer = LayerMask.NameToLayer("Default");
-		}
+		
+		playerBlocker.BulletsAllowed = bulletsAllowed;
+		playerBlocker.ItemsAllowed = itemsAllowed;
+		playerBlocker.UpdateState();
 		
 		return primitive.gameObject;
 	}

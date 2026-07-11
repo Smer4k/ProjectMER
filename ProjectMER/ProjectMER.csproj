@@ -35,7 +35,7 @@
       <HintPath>..\..\..\DLL\LabApi.dll</HintPath>
     </Reference>
     <Reference Include="Mirror">
-      <HintPath>..\..\..\DLL\Mirror.dll</HintPath>
+      <HintPath>..\..\..\DLL\publicized_assemblies\Mirror_publicized.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <HintPath>..\..\..\DLL\mscorlib.dll</HintPath>

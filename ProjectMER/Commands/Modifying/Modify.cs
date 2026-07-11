@@ -89,7 +89,11 @@ public class Modify : ICommand
 		}
 
 		bool result;
-		if (typeof(ICollection).IsAssignableFrom(foundProperty.PropertyType))
+		var isCollection = foundProperty.PropertyType
+			.GetInterfaces()
+			.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
+		
+		if (isCollection)
 			result = HandleCollection(out response);
 		else if (foundProperty.PropertyType != typeof(string))
 			result = HandleNonString(out response);
@@ -171,8 +175,18 @@ public class Modify : ICommand
 		bool HandleCollection(out string response)
 		{
 			object listInstance = foundProperty.GetValue(instance);
-			Type listType = foundProperty.PropertyType.GetInterfaces().First(x => x.IsGenericType).GetGenericArguments()[0];
+			Type collectionInterface = foundProperty.PropertyType
+				.GetInterfaces()
+				.First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
 
+			Type listType = collectionInterface.GetGenericArguments()[0];
+
+			if (arguments.Count < 2)
+			{
+				response = "Invalid arguments! Use add/remove.";
+				return false;
+			}
+			
 			switch (arguments.At(1).ToLower())
 			{
 				case "a":
