@@ -5,8 +5,8 @@ namespace ProjectMER.Features.Objects;
 
 public class SchematicPlayerSpawnpointObject : MonoBehaviour
 {
-    public List<RoleTypeId> Roles { get; set; } = [];
     public static readonly List<SchematicPlayerSpawnpointObject> SpawnpointObjects = new();
+    public List<RoleTypeId> Roles { get; set; } = [];
 
     public void OnEnable()
     {

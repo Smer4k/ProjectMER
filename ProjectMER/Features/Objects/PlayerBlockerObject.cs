@@ -4,6 +4,7 @@ using Mirror;
 using PlayerRoles;
 using PlayerRoles.FirstPersonControl;
 using UnityEngine;
+using UnityEngine.Serialization;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
 namespace ProjectMER.Features.Objects;
@@ -14,9 +15,9 @@ public sealed class PlayerBlockerObject : MonoBehaviour
     public bool BulletsAllowed = true;
     public bool ItemsAllowed = true;
     public HashSet<RoleTypeId> Roles = [];
+    public PrimitiveObjectToy? Hitbox { get; private set; }
     private readonly HashSet<Player> _ignoredPlayers = [];
     private PrimitiveObjectToy _primitive;
-    private PrimitiveObjectToy? _hitbox;
 
     public void Start()
     {
@@ -73,10 +74,10 @@ public sealed class PlayerBlockerObject : MonoBehaviour
         if (_primitive == null)
             return;
 
-        if (_hitbox != null)
+        if (Hitbox != null)
         {
-            NetworkServer.Destroy(_hitbox.gameObject);
-            _hitbox = null;
+            NetworkServer.Destroy(Hitbox.gameObject);
+            Hitbox = null;
         }
 
         if (ItemsAllowed && BulletsAllowed)
@@ -86,13 +87,13 @@ public sealed class PlayerBlockerObject : MonoBehaviour
         else if (ItemsAllowed)
         {
             _primitive.gameObject.layer = LayerMask.NameToLayer("InvisibleCollider");
-            _hitbox = GameObject.Instantiate(PrefabManager.PrimitiveObject, _primitive.transform);
-            _hitbox.NetworkPrimitiveType = _primitive.NetworkPrimitiveType;
-            _hitbox.PrimitiveFlags = PrimitiveFlags.Collidable;
-            _hitbox.gameObject.layer = LayerMask.NameToLayer("Hitbox");
-            _hitbox.transform.SetPositionAndRotation(_primitive.transform.position, _primitive.transform.rotation);
-            _hitbox.transform.localScale = _primitive.transform.localScale - new Vector3(0.01f, 0.01f, 0.01f);
-            NetworkServer.Spawn(_hitbox.gameObject);
+            Hitbox = GameObject.Instantiate(PrefabManager.PrimitiveObject, _primitive.transform);
+            Hitbox.NetworkPrimitiveType = _primitive.NetworkPrimitiveType;
+            Hitbox.PrimitiveFlags = PrimitiveFlags.Collidable;
+            Hitbox.gameObject.layer = LayerMask.NameToLayer("Hitbox");
+            Hitbox.transform.SetPositionAndRotation(_primitive.transform.position, _primitive.transform.rotation);
+            Hitbox.transform.localScale = _primitive.transform.localScale - new Vector3(0.01f, 0.01f, 0.01f);
+            NetworkServer.Spawn(Hitbox.gameObject);
         }
         else if (BulletsAllowed)
         {

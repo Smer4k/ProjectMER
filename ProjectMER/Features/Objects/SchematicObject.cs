@@ -152,6 +152,12 @@ public class SchematicObject : MonoBehaviour
 				playerBlockers.UpdateVisibility();
 			}
 		});
+		// coroutine
+		foreach (var damageableObject in transform.GetComponentsInChildren<DamageableObject>())
+		{
+			damageableObject.RegisterChildDestructibles(data.Blocks);
+		}
+		
 		Schematic.OnSchematicSpawned(new(this, Name));
 
 		return this;

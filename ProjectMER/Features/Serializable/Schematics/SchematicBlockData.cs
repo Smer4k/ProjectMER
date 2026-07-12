@@ -1,7 +1,6 @@
 using AdminToys;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
-using InventorySystem.Items.Firearms.Modules;
 using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MapGeneration;
@@ -10,7 +9,6 @@ using MEC;
 using Mirror;
 using PlayerRoles;
 using ProjectMER.Events.Handlers.Internal;
-using ProjectMER.Features.Actions;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
@@ -78,7 +76,7 @@ public class SchematicBlockData
 
 		GameObject? gameObject = BlockType switch
 		{
-			BlockType.Empty => CreateEmpty(),
+			BlockType.Empty => CreateEmpty(schematicObject),
 			BlockType.Primitive => CreatePrimitive(),
 			BlockType.Light => CreateLight(schematicObject),
 			BlockType.Pickup => CreatePickup(schematicObject),
@@ -99,7 +97,7 @@ public class SchematicBlockData
 			BlockType.Clutter => CreateClutter(),
 			BlockType.Trigger => CreateTrigger(schematicObject),
 			BlockType.AudioPlayer => CreateAudioPlayer(schematicObject),
-			_ => CreateEmpty(true)
+			_ => CreateEmpty(fallback: true)
 		};
 		
 		if (gameObject == null)
@@ -169,14 +167,57 @@ public class SchematicBlockData
 		return gameObject;
 	}
 
-	private GameObject CreateEmpty(bool fallback = false)
+	private GameObject CreateEmpty(SchematicObject? schematicObject = null, bool fallback = false)
 	{
 		if (fallback)
 			Logger.Warn($"{BlockType} is not yet implemented. Object will be an empty GameObject instead.");
 
 		PrimitiveObjectToy primitive = GameObject.Instantiate(PrefabManager.PrimitiveObject);
 		primitive.NetworkPrimitiveFlags = PrimitiveFlags.None;
+		
+		if (!Properties.TryGetValue("Damageable", out object damageableObj))
+		{
+			return primitive.gameObject;
+		}
+		
+		var damageable = Convert.ToBoolean(damageableObj);
+		if (!damageable)
+		{
+			return primitive.gameObject;
+		}
+		var damageableObject = primitive.gameObject.AddComponent<DamageableObject>();
+		if (Properties.TryGetValue("Health", out object healthObj))
+		{
+			damageableObject.Health = Convert.ToSingle(healthObj);
+		}
 
+		if (Properties.TryGetValue("Weapons", out object weaponsObj))
+		{
+			foreach (var weapon in (List<object>)weaponsObj)
+			{
+				damageableObject.Weapons.Add((ItemType)Convert.ToInt32(weapon));
+			}
+		}
+
+		if (Properties.TryGetValue("ExplosionTypes", out object explosionTypesObj))
+		{
+			damageableObject.ExplosionTypes.Clear();
+			foreach (var role in (List<object>)explosionTypesObj)
+			{
+				damageableObject.ExplosionTypes.Add((ExplosionType)Convert.ToInt32(role));
+			}
+		}
+
+		if (Properties.TryGetValue("Roles", out object rolesObj))
+		{
+			foreach (var role in (List<object>)rolesObj)
+			{
+				damageableObject.Roles.Add((RoleTypeId)Convert.ToSByte(role));
+			}
+		}
+
+		damageableObject.SchematicObject = schematicObject;
+		damageableObject.ObjectId = ObjectId;
 		return primitive.gameObject;
 	}
 
