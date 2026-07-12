@@ -30,16 +30,17 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 
 - Waypoints are fixed
 - Added all objects from AdminToys, Doors, MirrorObjects, Clutter, PlayerBlocker, CullingParent and Trigger for schematics in Unity
-- Actions for Trigger and Interactable (as in AMERT, but more simplified and less functional)
+- Actions for Trigger, Interactable, Light, and DamageableObject (as in AMERT, but more simplified and less functional)
 - Cooldown for teleports is now different for each player
 - Clutter - spawn an object with some chance
-- PlayerBlocker - blocks the player, but not objects and bullets.
+- PlayerBlocker – blocks players, but not items or bullets. If configured, it can also allow specific player roles to pass through.
 - CullingParent - optimization for schematics, removes the rendering of child objects if they have disappeared behind the fog distances. (Works on the client side)
 - Trigger - is triggered when the player enters/exits and he is still in it. (For actions or plugins)
 - It is possible to spawn a schematic from another path (for plugins)
 - New parameters Flicker and FlickerZone have been added for light sources, they make light sources react to the power outages in the room and Scp 2176
 - You can edit the MovementSmoothing parameter for each object (responsible for the smooth movement of the object locally for the player)
 - AudioPlayer - plays a sound/music (need AudioProjectMER or other plugin to work)
+- DamageableObject – an object that can be damaged.
 
 # AudioProjectMER
 AudioProjectMER is a plugin that allows you to play music/sounds in the game. It is required for the AudioPlayer object to work.
