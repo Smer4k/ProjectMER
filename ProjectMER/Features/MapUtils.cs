@@ -38,21 +38,14 @@ public static class MapUtils
 			if (!TryGetSchematicDataByName(schematic.SchematicName, out var data)) continue;
 			foreach (var block in data.Blocks.ToArray())
 			{
-				if (block.BlockType is 
-				    BlockType.Light or 
-				    BlockType.Empty or 
-				    BlockType.Interactable or 
-				    BlockType.Primitive or 
-				    BlockType.Schematic or 
-				    BlockType.Pickup or 
-				    BlockType.Waypoint or 
-				    BlockType.Text or 
-				    BlockType.Workstation or 
-				    BlockType.Clutter or
-				    BlockType.MirrorPrefab or 
-				    BlockType.PlayerBlocker or 
-				    BlockType.Trigger or
-				    BlockType.CullingParent) 
+				if (block.BlockType is not BlockType.Teleport
+				    and not BlockType.Door
+				    and not BlockType.Locker
+				    and not BlockType.Workstation
+				    and not BlockType.Camera
+				    and not BlockType.ShootingTarget
+				    and not BlockType.PlayerSpawnPoint
+				    and not BlockType.Capybara)
 					continue;
 				var transform = mapObject.GetComponent<SchematicObject>().ObjectFromId[block.ObjectId];
 				Room room = RoomExtensions.GetRoomAtPosition(transform.position);
