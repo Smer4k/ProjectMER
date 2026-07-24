@@ -1,6 +1,7 @@
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
 using MEC;
+using PlayerRoles;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
@@ -27,7 +28,7 @@ public class GenericEventsHandler : CustomEventsHandler
 
 	public override void OnPlayerSpawning(PlayerSpawningEventArgs ev)
 	{
-		if (!ev.UseSpawnPoint)
+		if (!ev.Role.ServerSpawnFlags.HasFlag(RoleSpawnFlags.UseSpawnpoint))
 			return;
 
 		List<MonoBehaviour> list = [];
