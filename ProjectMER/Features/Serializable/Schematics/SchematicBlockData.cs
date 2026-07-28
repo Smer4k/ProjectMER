@@ -452,12 +452,6 @@ public class SchematicBlockData
 
 		Timing.CallDelayed(0.25f, () =>
 		{
-			foreach (ItemPickupBase itemPickupBase in locker.GetComponentsInChildren<ItemPickupBase>())
-			{
-				if (itemPickupBase.TryGetComponent(out Rigidbody rigidbody))
-					rigidbody.isKinematic = false;
-			}
-
 			i = 0;
 			foreach (LapApiLockerChamber chamber in labApiLocker.Chambers)
 			{
