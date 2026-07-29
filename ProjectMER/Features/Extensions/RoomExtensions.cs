@@ -9,7 +9,14 @@ namespace ProjectMER.Features.Extensions;
 
 public static class RoomExtensions
 {
-	public static Room GetRoomAtPosition(Vector3 position) => Room.TryGetRoomAtPosition(position, out Room? room) ? room : Room.List.First(x => x.Base != null && x.Name == RoomName.Outside);
+	public static Room GetRoomAtPosition(Vector3 position)
+	{
+		if (ProjectMER.Singleton.Config.UseAlwaysGlobalCoordinates)
+		{
+			return Room.List.First(x => x.Base != null && x.Name == RoomName.Outside);
+		}
+		return Room.TryGetRoomAtPosition(position, out Room? room) ? room : Room.List.First(x => x.Base != null && x.Name == RoomName.Outside);
+	}
 
     public static string GetRoomStringId(this Room room) => $"{room.Zone}_{room.Shape}_{room.GetExtendedRoomName()}";
 

@@ -9,6 +9,9 @@ public class Config
 
 	[Description("Whether the object will be auto selected when spawning it.")]
 	public bool AutoSelect { get; set; } = true;
+	
+	[Description("All objects and schematics will use world coordinates and will not be attached to rooms (useful if using a static seed)")]
+	public bool UseAlwaysGlobalCoordinates { get; set; } = false;
 
 	[Description("Enable/disable backward compatibility with the official version of MER (custom objects are converted to ToolGun objects when saving the map)")]
 	public bool BackwardСompatibility { get; set; } = false;
