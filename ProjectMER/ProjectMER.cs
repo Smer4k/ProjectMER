@@ -17,6 +17,10 @@ public class ProjectMER : Plugin<Config>
 	private FileSystemWatcher _mapFileSystemWatcher;
 
 	public static ProjectMER Singleton { get; private set; }
+	/// <summary>
+	/// Server Specific Setting ID
+	/// </summary>
+	public const int MerSettingId = int.MaxValue;
 
 	/// <summary>
 	/// Gets the MapEditorReborn parent folder path.

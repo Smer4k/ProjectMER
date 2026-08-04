@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Debug;Release;Exiled</Configurations>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
@@ -45,6 +46,12 @@
     </Reference>
     <Reference Include="Pooling">
       <HintPath>..\..\..\DLL\Pooling.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>..\..\..\DLL\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>..\..\..\DLL\System.Core.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\..\DLL\Unity.TextMeshPro.dll</HintPath>

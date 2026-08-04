@@ -7,6 +7,7 @@ using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.ToolGun;
 using UnityEngine;
+using UserSettings.ServerSpecific;
 
 namespace ProjectMER.Events.Handlers.Internal;
 
@@ -24,6 +25,17 @@ public class GenericEventsHandler : CustomEventsHandler
 		FlickerController.Instances.Clear();
 		FlickerController.FlickersBySchematic.Clear();
 		FlickerController.FlickersByRoom.Clear();
+	}
+
+	public override void OnPlayerJoined(PlayerJoinedEventArgs ev)
+	{
+		if (ServerSpecificSettingsSync.DefinedSettings == null)
+			return;
+		var settings = ServerSpecificSettingsSync.DefinedSettings.Where(x =>
+			x is not SSDropdownSetting { SettingId: ProjectMER.MerSettingId }
+				and not SSGroupHeader { Label: "ProjectMER" }).ToArray();
+		ev.Player.ConnectionToClient.Send<SSSEntriesPack>(new SSSEntriesPack(settings,
+			ServerSpecificSettingsSync.Version));
 	}
 
 	public override void OnPlayerSpawning(PlayerSpawningEventArgs ev)
