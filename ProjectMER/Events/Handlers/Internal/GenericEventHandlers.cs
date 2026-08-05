@@ -179,6 +179,9 @@ public class GenericEventsHandler : CustomEventsHandler
 		if (ev.Player.IsDestroyed || ev.Player.IsDummy || ev.Player.IsNpc)
 			return;
 		
+		if (CullingZoneObject.AllCullingZone.Count == 0 && CullingZoneConnectorObject.AllConnectors.Count == 0)
+			return;
+		
 		foreach (var connector in CullingZoneConnectorObject.AllConnectors)
 		{
 			connector.RemovePlayer(ev.Player);
