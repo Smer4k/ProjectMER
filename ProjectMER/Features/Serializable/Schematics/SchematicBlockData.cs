@@ -97,6 +97,8 @@ public class SchematicBlockData
 			BlockType.Clutter => CreateClutter(),
 			BlockType.Trigger => CreateTrigger(schematicObject),
 			BlockType.AudioPlayer => CreateAudioPlayer(schematicObject),
+			BlockType.CullingZone => CreateCullingZone(),
+			BlockType.CullingZoneConnector => CreateCullingZoneConnector(),
 			_ => CreateEmpty(fallback: true)
 		};
 		
@@ -692,5 +694,64 @@ public class SchematicBlockData
 		
 		schematicObject.AudioPlayerSettingsByObjectId.Add(ObjectId, settings);
 		return gameObject;
+	}
+
+	public GameObject? CreateCullingZone()
+	{
+		var empty = CreateEmpty();
+		var cullingZoneObject = empty.AddComponent<CullingZoneObject>();
+		
+		if (Properties.TryGetValue("ObjectPerSpawn", out object numberOfObjectPerSpawnObj))
+			cullingZoneObject.NumberOfObjectPerSpawn = Convert.ToInt32(numberOfObjectPerSpawnObj);
+
+		var colliderShape = InvisibleInteractableToy.ColliderShape.Sphere;
+		if (Properties.TryGetValue("ColliderShape", out object colliderShapeObj))
+			colliderShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(colliderShapeObj);
+
+		switch (colliderShape)
+		{
+			case InvisibleInteractableToy.ColliderShape.Sphere:
+				cullingZoneObject.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				break;
+			case InvisibleInteractableToy.ColliderShape.Box:
+				cullingZoneObject.gameObject.AddComponent<BoxCollider>().isTrigger = true;
+				break;
+			case InvisibleInteractableToy.ColliderShape.Capsule:
+				cullingZoneObject.gameObject.AddComponent<CapsuleCollider>().isTrigger = true;
+				break;
+			default:
+				cullingZoneObject.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				break;
+		}
+		
+		return empty;
+	}
+
+	public GameObject? CreateCullingZoneConnector()
+	{
+		var empty = CreateEmpty();
+		var connector = empty.AddComponent<CullingZoneConnectorObject>();
+		
+		var colliderShape = InvisibleInteractableToy.ColliderShape.Sphere;
+		if (Properties.TryGetValue("ColliderShape", out object colliderShapeObj))
+			colliderShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(colliderShapeObj);
+
+		switch (colliderShape)
+		{
+			case InvisibleInteractableToy.ColliderShape.Sphere:
+				connector.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				break;
+			case InvisibleInteractableToy.ColliderShape.Box:
+				connector.gameObject.AddComponent<BoxCollider>().isTrigger = true;
+				break;
+			case InvisibleInteractableToy.ColliderShape.Capsule:
+				connector.gameObject.AddComponent<CapsuleCollider>().isTrigger = true;
+				break;
+			default:
+				connector.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				break;
+		}
+		
+		return empty;
 	}
 }

@@ -149,12 +149,18 @@ public class SchematicObject : MonoBehaviour
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
 		AddRigidbodies();
 		AddAnimators();
+		InitCullingZoneConnectors(data.Blocks);
 		
 		Timing.CallDelayed(0.3f, () =>
 		{
 			foreach (var playerBlockers in transform.GetComponentsInChildren<PlayerBlockerObject>())
 			{
 				playerBlockers.UpdateVisibility();
+			}
+
+			foreach (var cullingZone in transform.GetComponentsInChildren<CullingZoneObject>())
+			{
+				_ = cullingZone.InitializeAsync();
 			}
 
 			foreach (var locker in transform.GetComponentsInChildren<Locker>())
@@ -370,6 +376,31 @@ public class SchematicObject : MonoBehaviour
 		}
 
 		return hasRigidbodies;
+	}
+
+	private void InitCullingZoneConnectors(List<SchematicBlockData> blocks)
+	{
+		foreach (var block in blocks)
+		{
+			if (block.BlockType != BlockType.CullingZoneConnector)
+				continue;
+			if (!block.Properties.TryGetValue("CullingZones", out var cullingZonesObj))
+			{
+				continue;
+			}
+			var connector = ObjectFromId[block.ObjectId].GetComponent<CullingZoneConnectorObject>();
+			if (connector == null)
+				continue;
+			foreach (var id in (List<object>)cullingZonesObj)
+			{
+				if (!ObjectFromId.TryGetValue(Convert.ToInt32(id), out var target) ||
+				    !target.TryGetComponent<CullingZoneObject>(out var zone))
+				{
+					continue;
+				}
+				connector.CullingZoneObjects.Add(zone);
+			}
+		}
 	}
 
 
