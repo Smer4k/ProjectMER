@@ -98,7 +98,6 @@ public class SchematicBlockData
 			BlockType.Trigger => CreateTrigger(schematicObject),
 			BlockType.AudioPlayer => CreateAudioPlayer(schematicObject),
 			BlockType.CullingZone => CreateCullingZone(),
-			BlockType.CullingZoneConnector => CreateCullingZoneConnector(),
 			_ => CreateEmpty(fallback: true)
 		};
 		
@@ -244,6 +243,13 @@ public class SchematicBlockData
 		}
 		
 		primitive.NetworkPrimitiveFlags = primitiveFlags;
+
+		if (Properties.TryGetValue("Scp106Passable", out object scp106PassableObj)
+		    && Convert.ToBoolean(scp106PassableObj))
+		{
+			primitive.gameObject.AddComponent<Scp106PassableObject>();
+		}
+		
 		return primitive.gameObject;
 	}
 
@@ -708,47 +714,36 @@ public class SchematicBlockData
 		if (Properties.TryGetValue("ColliderShape", out object colliderShapeObj))
 			colliderShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(colliderShapeObj);
 
-		switch (colliderShape)
+		var colliderSize = Vector3.one;
+		if (Properties.TryGetValue("ColliderSize", out object colliderSizeObj))
 		{
-			case InvisibleInteractableToy.ColliderShape.Sphere:
-				cullingZoneObject.gameObject.AddComponent<SphereCollider>().isTrigger = true;
-				break;
-			case InvisibleInteractableToy.ColliderShape.Box:
-				cullingZoneObject.gameObject.AddComponent<BoxCollider>().isTrigger = true;
-				break;
-			case InvisibleInteractableToy.ColliderShape.Capsule:
-				cullingZoneObject.gameObject.AddComponent<CapsuleCollider>().isTrigger = true;
-				break;
-			default:
-				cullingZoneObject.gameObject.AddComponent<SphereCollider>().isTrigger = true;
-				break;
+			colliderSize = colliderSizeObj.ToVector3();
 		}
 		
-		return empty;
-	}
-
-	public GameObject? CreateCullingZoneConnector()
-	{
-		var empty = CreateEmpty();
-		var connector = empty.AddComponent<CullingZoneConnectorObject>();
-		
-		var colliderShape = InvisibleInteractableToy.ColliderShape.Sphere;
-		if (Properties.TryGetValue("ColliderShape", out object colliderShapeObj))
-			colliderShape = (InvisibleInteractableToy.ColliderShape)Convert.ToInt32(colliderShapeObj);
-
 		switch (colliderShape)
 		{
 			case InvisibleInteractableToy.ColliderShape.Sphere:
-				connector.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				var sphereCollider = cullingZoneObject.gameObject.AddComponent<SphereCollider>();
+				sphereCollider.isTrigger = true;
+				sphereCollider.radius = colliderSize.x;
 				break;
 			case InvisibleInteractableToy.ColliderShape.Box:
-				connector.gameObject.AddComponent<BoxCollider>().isTrigger = true;
+				var boxCollider = cullingZoneObject.gameObject.AddComponent<BoxCollider>();
+				boxCollider.isTrigger = true;
+				boxCollider.size = colliderSize;
+				if (Properties.TryGetValue("ColliderCenter", out object colliderCenterObj))
+					boxCollider.center = colliderCenterObj.ToVector3();
 				break;
 			case InvisibleInteractableToy.ColliderShape.Capsule:
-				connector.gameObject.AddComponent<CapsuleCollider>().isTrigger = true;
+				var capsuleCollider = cullingZoneObject.gameObject.AddComponent<CapsuleCollider>();
+				capsuleCollider.isTrigger = true;
+				capsuleCollider.height = colliderSize.y;
+				capsuleCollider.radius = colliderSize.x;
 				break;
 			default:
-				connector.gameObject.AddComponent<SphereCollider>().isTrigger = true;
+				sphereCollider = cullingZoneObject.gameObject.AddComponent<SphereCollider>();
+				sphereCollider.isTrigger = true;
+				sphereCollider.radius = colliderSize.x;
 				break;
 		}
 		

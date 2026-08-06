@@ -67,6 +67,8 @@ public static class PrefabManager
 	public static GameObject HugeOrangePipes { get; private set; }
 	public static GameObject PipesLong { get; private set; }
 	
+	public static bool Initialized { get; private set; }
+	
 	public static GameObject GetMirrorPrefab(MirrorPrefabType type)
 	{
 		return type switch
@@ -82,9 +84,16 @@ public static class PrefabManager
 			_ => throw new InvalidOperationException(),
 		};
 	}
+
+	public static void Reset()
+	{
+		Initialized = false;
+	}
 	
 	public static void RegisterPrefabs()
 	{
+		if (Initialized)
+			return;
 		foreach (GameObject gameObject in NetworkClient.prefabs.Values)
 		{
 			if (gameObject.TryGetComponent(out PrimitiveObjectToy primitiveObjectToy))
@@ -277,7 +286,8 @@ public static class PrefabManager
 					PipesLong = gameObject;
 					break;
 			}
-
 		}
+
+		Initialized = true;
 	}
 }

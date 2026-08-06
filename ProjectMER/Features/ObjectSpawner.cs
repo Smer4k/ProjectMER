@@ -10,12 +10,20 @@ public static class ObjectSpawner
 {
 	public static PrimitiveObjectToy SpawnPrimitive(SerializablePrimitive serializablePrimitive)
 	{
+		if (!PrefabManager.Initialized)
+		{
+			PrefabManager.RegisterPrefabs();
+		}
 		GameObject gameObject = serializablePrimitive.SpawnOrUpdateObject();
 		return gameObject.GetComponent<PrimitiveObjectToy>();
 	}
 
 	public static SchematicObject SpawnSchematic(SerializableSchematic serializableSchematic)
 	{
+		if (!PrefabManager.Initialized)
+		{
+			PrefabManager.RegisterPrefabs();
+		}
 		GameObject? gameObject = serializableSchematic.SpawnOrUpdateObject();
 		if (gameObject == null)
 			return null!;

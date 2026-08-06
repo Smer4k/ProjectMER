@@ -97,10 +97,9 @@ public class ToolGunItem
     {
         foreach (ItemBase itemBase in player.Inventory.UserInventory.Items.Values)
         {
-            if (ItemDictionary.ContainsKey(itemBase.ItemSerial))
+            if (ItemDictionary.Remove(itemBase.ItemSerial))
             {
-                ItemDictionary.Remove(itemBase.ItemSerial);
-                player.RemoveItem(itemBase);
+	            player.RemoveItem(itemBase);
 
                 ServerSpecificSettingBase[] filteredSettings = [.. (ServerSpecificSettingsSync.DefinedSettings ?? []).Where(x => x is not SSDropdownSetting { SettingId: ProjectMER.MerSettingId } && x is not SSGroupHeader { Label: "ProjectMER" })];
 

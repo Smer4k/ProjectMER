@@ -1,5 +1,4 @@
 using AdminToys;
-using CentralAuth;
 using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -12,7 +11,6 @@ using ProjectMER.Features.Serializable.Schematics;
 using UnityEngine;
 using Utf8Json;
 using Utils.NonAllocLINQ;
-using FirearmPickup = InventorySystem.Items.Firearms.FirearmPickup;
 using Locker = MapGeneration.Distributors.Locker;
 using Object = UnityEngine.Object;
 
@@ -149,7 +147,7 @@ public class SchematicObject : MonoBehaviour
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
 		AddRigidbodies();
 		AddAnimators();
-		InitCullingZoneConnectors(data.Blocks);
+		InitCullingZones(data.Blocks);
 		
 		Timing.CallDelayed(0.3f, () =>
 		{
@@ -162,7 +160,10 @@ public class SchematicObject : MonoBehaviour
 			{
 				_ = cullingZone.InitializeAsync();
 			}
+		});
 
+		Timing.CallDelayed(2f, () =>
+		{
 			foreach (var locker in transform.GetComponentsInChildren<Locker>())
 			{
 				foreach (var itemPickupBase in locker.GetComponentsInChildren<ItemPickupBase>())
@@ -378,27 +379,27 @@ public class SchematicObject : MonoBehaviour
 		return hasRigidbodies;
 	}
 
-	private void InitCullingZoneConnectors(List<SchematicBlockData> blocks)
+	private void InitCullingZones(List<SchematicBlockData> blocks)
 	{
 		foreach (var block in blocks)
 		{
-			if (block.BlockType != BlockType.CullingZoneConnector)
+			if (block.BlockType != BlockType.CullingZone)
 				continue;
-			if (!block.Properties.TryGetValue("CullingZones", out var cullingZonesObj))
+			if (!block.Properties.TryGetValue("ConnectedZones", out var connectedZonesObj))
 			{
 				continue;
 			}
-			var connector = ObjectFromId[block.ObjectId].GetComponent<CullingZoneConnectorObject>();
+			var connector = ObjectFromId[block.ObjectId].GetComponent<CullingZoneObject>();
 			if (connector == null)
 				continue;
-			foreach (var id in (List<object>)cullingZonesObj)
+			foreach (var id in (List<object>)connectedZonesObj)
 			{
 				if (!ObjectFromId.TryGetValue(Convert.ToInt32(id), out var target) ||
 				    !target.TryGetComponent<CullingZoneObject>(out var zone))
 				{
 					continue;
 				}
-				connector.CullingZoneObjects.Add(zone);
+				connector.ConnectedZones.Add(zone);
 			}
 		}
 	}

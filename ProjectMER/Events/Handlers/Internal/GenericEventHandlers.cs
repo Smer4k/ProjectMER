@@ -4,7 +4,6 @@ using LabApi.Events.CustomHandlers;
 using MEC;
 using PlayerRoles;
 using ProjectMER.Features;
-using ProjectMER.Features.Interfaces;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.ToolGun;
@@ -15,6 +14,11 @@ namespace ProjectMER.Events.Handlers.Internal;
 
 public class GenericEventsHandler : CustomEventsHandler
 {
+	public override void OnServerRoundRestarted()
+	{
+		PrefabManager.Reset();
+	}
+
 	public override void OnServerWaitingForPlayers()
 	{
 		PrefabManager.RegisterPrefabs();
@@ -96,8 +100,23 @@ public class GenericEventsHandler : CustomEventsHandler
 				playerBlocker.ShowForPlayer(ev.Player);
 			}
 		}
+
+		if (ev.NewRole.RoleTypeId == RoleTypeId.Scp106)
+		{
+			foreach (var passableObject in Scp106PassableObject.AllPassableObjects)
+			{
+				passableObject.SetPassableFor(ev.Player, true);
+			}
+		} else if (ev.OldRole == RoleTypeId.Scp106)
+		{
+			foreach (var passableObject in Scp106PassableObject.AllPassableObjects)
+			{
+				passableObject.SetPassableFor(ev.Player, false);
+			}
+		}
 	
-		if (ev.Player.IsDummy || ev.Player.IsNpc)
+		if (CullingZoneObject.AllCullingZone.Count == 0 || 
+		    ev.Player.IsDestroyed || ev.Player.IsDummy || ev.Player.IsNpc)
 		{
 			return;
 		}
@@ -108,19 +127,12 @@ public class GenericEventsHandler : CustomEventsHandler
 			{
 				if (ev.Player == null || ev.Player.IsDestroyed || ev.NewRole.RoleTypeId == RoleTypeId.Scp079)
 					return;
-				foreach (var connector in CullingZoneConnectorObject.AllConnectors)
-				{
-					connector.RemovePlayer(ev.Player);
-				}
-		
 				foreach (var zone in CullingZoneObject.AllCullingZone)
 				{
 					zone.RemovePlayer(ev.Player);
 				}
 			});
-		}
-
-		if (ev.NewRole.RoleTypeId == RoleTypeId.Filmmaker)
+		} else if (ev.NewRole.RoleTypeId == RoleTypeId.Filmmaker)
 		{
 			Timing.CallDelayed(0.5f, () =>
 			{
@@ -131,9 +143,7 @@ public class GenericEventsHandler : CustomEventsHandler
 					zone.AddPlayer(ev.Player);
 				}
 			});
-		}
-
-		if (ev.OldRole == RoleTypeId.Filmmaker)
+		} else if (ev.OldRole == RoleTypeId.Filmmaker)
 		{
 			Timing.CallDelayed(0.5f, () =>
 			{
@@ -176,16 +186,11 @@ public class GenericEventsHandler : CustomEventsHandler
 
 	public override void OnScp079ChangedCamera(Scp079ChangedCameraEventArgs ev)
 	{
+		if (CullingZoneObject.AllCullingZone.Count == 0)
+			return;
+		
 		if (ev.Player.IsDestroyed || ev.Player.IsDummy || ev.Player.IsNpc)
 			return;
-		
-		if (CullingZoneObject.AllCullingZone.Count == 0 && CullingZoneConnectorObject.AllConnectors.Count == 0)
-			return;
-		
-		foreach (var connector in CullingZoneConnectorObject.AllConnectors)
-		{
-			connector.RemovePlayer(ev.Player);
-		}
 		
 		foreach (var zone in CullingZoneObject.AllCullingZone)
 		{
@@ -200,7 +205,7 @@ public class GenericEventsHandler : CustomEventsHandler
 
 		foreach (var collider in colliders)
 		{
-			if (collider.TryGetComponent(out ICullingContainer cullingContainer))
+			if (collider.TryGetComponent(out CullingZoneObject cullingContainer))
 			{
 				cullingContainer.AddPlayer(ev.Player);
 			}

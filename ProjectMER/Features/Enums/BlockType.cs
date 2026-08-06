@@ -59,5 +59,4 @@ public enum BlockType
 	Trigger = 39,
 	AudioPlayer = 40,
 	CullingZone = 41,
-	CullingZoneConnector = 42,
 }
