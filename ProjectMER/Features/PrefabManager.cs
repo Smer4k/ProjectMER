@@ -66,6 +66,8 @@ public static class PrefabManager
 	public static GameObject AngledFences { get; private set; }
 	public static GameObject HugeOrangePipes { get; private set; }
 	public static GameObject PipesLong { get; private set; }
+
+	public static Scp079Generator Generator { get; private set; }
 	
 	public static bool Initialized { get; private set; }
 	
@@ -263,28 +265,34 @@ public static class PrefabManager
 			{
 				case "Broken Electrical Box Open Connector":
 					BrokenElectricalBox = gameObject;
-					break;
+					continue;
 				case "Simple Boxes Open Connector":
 					SimpleBoxes = gameObject;
-					break;
+					continue;
 				case "Pipes Short Open Connector":
 					PipesShort = gameObject;
-					break;
+					continue;
 				case "Boxes Ladder Open Connector":
 					BoxesLadder = gameObject;
-					break;
+					continue;
 				case "Tank-Supported Shelf Open Connector":
 					TankSupportedShelf = gameObject;
-					break;
+					continue;
 				case "Angled Fences Open Connector":
 					AngledFences = gameObject;
-					break;
+					continue;
 				case "Huge Orange Pipes Open Connector":
 					HugeOrangePipes = gameObject;
-					break;
+					continue;
 				case "Pipes Long Open Connector":
 					PipesLong = gameObject;
-					break;
+					continue;
+			}
+			
+			if (gameObject.TryGetComponent(out Scp079Generator scp079Generator))
+			{
+				Generator = scp079Generator;
+				continue;
 			}
 		}
 

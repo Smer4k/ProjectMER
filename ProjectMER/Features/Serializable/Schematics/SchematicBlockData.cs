@@ -1,4 +1,5 @@
 using AdminToys;
+using Footprinting;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Pickups;
@@ -98,6 +99,7 @@ public class SchematicBlockData
 			BlockType.Trigger => CreateTrigger(schematicObject),
 			BlockType.AudioPlayer => CreateAudioPlayer(schematicObject),
 			BlockType.CullingZone => CreateCullingZone(),
+			BlockType.Generator => CreateGenerator(),
 			_ => CreateEmpty(fallback: true)
 		};
 		
@@ -748,5 +750,55 @@ public class SchematicBlockData
 		}
 		
 		return empty;
+	}
+
+	public GameObject? CreateGenerator()
+	{
+		var generator = GameObject.Instantiate(PrefabManager.Generator);
+		Scp079Generator.GeneratorFlags flags = Scp079Generator.GeneratorFlags.None;
+		
+		if (Properties.TryGetValue("GeneratorFlags", out object generatorFlagsObj))
+		{
+			flags = (Scp079Generator.GeneratorFlags)Convert.ToByte(generatorFlagsObj);
+		}
+
+		if (flags.HasFlag(Scp079Generator.GeneratorFlags.Unlocked))
+		{
+			generator.IsUnlocked = true;
+		}
+
+		if (flags.HasFlag(Scp079Generator.GeneratorFlags.Open))
+		{
+			generator.IsOpen = true;
+		}
+
+		if (flags.HasFlag(Scp079Generator.GeneratorFlags.Activating))
+		{
+			generator.Activating = true;
+			generator._leverStopwatch.Restart();
+			generator._lastActivator = new Footprint();
+		}
+
+		if (flags.HasFlag(Scp079Generator.GeneratorFlags.Engaged))
+		{
+			generator.Engaged = true;
+		}
+
+		if (Properties.TryGetValue("RequiredPermissions", out object requiredPermissionsObj))
+		{
+			generator.RequiredPermissions = (DoorPermissionFlags)Convert.ToUInt16(requiredPermissionsObj);
+		}
+
+		if (Properties.TryGetValue("TotalActivationTime", out object totalActivationTimeObj))
+		{
+			generator.TotalActivationTime = Convert.ToSingle(totalActivationTimeObj);
+		}
+
+		if (Properties.TryGetValue("TotalDeactivationTime", out object totalDeactivationTimeObj))
+		{
+			generator.TotalDeactivationTime = Convert.ToSingle(totalDeactivationTimeObj);
+		}
+		
+		return generator.gameObject;
 	}
 }

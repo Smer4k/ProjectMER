@@ -98,7 +98,8 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 			    BlockType.Locker and not
 			    BlockType.Door and not 
 			    BlockType.CullingParent and not
-			    BlockType.MirrorPrefab) 
+			    BlockType.MirrorPrefab and not
+			    BlockType.Generator)
 				continue;
 			var gameObject = schematicObject.ObjectFromId[block.ObjectId].gameObject;
 			

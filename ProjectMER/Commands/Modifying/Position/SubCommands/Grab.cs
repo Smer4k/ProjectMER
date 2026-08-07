@@ -1,6 +1,7 @@
 ﻿using CommandSystem;
 using LabApi.Features.Permissions;
 using LabApi.Features.Wrappers;
+using MapGeneration.Distributors;
 using MEC;
 using Mirror;
 using ProjectMER.Features.Objects;
@@ -89,6 +90,13 @@ public class Grab : ICommand
 				{
 					waypointBase.SetPosition();
 				}
+				NetworkServer.UnSpawn(mapEditorObject.gameObject);
+				NetworkServer.Spawn(mapEditorObject.gameObject);
+			}
+			
+			if (mapEditorObject.Base is SerializableGenerator _ && mapEditorObject.TryGetComponent(out StructurePositionSync structurePositionSync))
+			{
+				structurePositionSync.Network_position = mapEditorObject.transform.position;
 				NetworkServer.UnSpawn(mapEditorObject.gameObject);
 				NetworkServer.Spawn(mapEditorObject.gameObject);
 			}
