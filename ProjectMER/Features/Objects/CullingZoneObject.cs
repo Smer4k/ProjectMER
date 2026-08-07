@@ -244,7 +244,7 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (_awaitingSpawn.Count <= 0)
             return;
 
-        foreach (var player in _awaitingSpawn.Keys)
+        foreach (var player in _awaitingSpawn.Keys.ToList())
         {
             if (_awaitingSpawn[player] > removedIndex)
                 _awaitingSpawn[player]--;
