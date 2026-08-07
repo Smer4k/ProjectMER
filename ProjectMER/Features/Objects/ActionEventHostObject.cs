@@ -412,7 +412,17 @@ public sealed class ActionEventHostObject
             Logger.Warn($"ExecuteDestroy action skipped: object {targetObjectId} not found.");
             return;
         }
-
+        
+        if (targetTransform.TryGetComponent<NetworkIdentity>(out var networkIdentity))
+        {
+            foreach (var cullingZone in CullingZoneObject.AllCullingZone)
+            {
+                if (cullingZone.Contains(networkIdentity))
+                {
+                    cullingZone.RemoveObject(networkIdentity);
+                }
+            }
+        }
         NetworkServer.Destroy(targetTransform.gameObject);
     }
 
