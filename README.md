@@ -41,6 +41,9 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 - You can edit the MovementSmoothing parameter for each object (responsible for the smooth movement of the object locally for the player)
 - AudioPlayer - plays a sound/music (need AudioProjectMER or other plugin to work)
 - DamageableObject – an object that can be damaged.
+- CullingZone - if a player enters this zone, the child objects will appear for that player. (Works for SCP-079. Similar to how it works in MEROptimizer)
+- Generator - the generators that appear in the game can now be used
+- Scp106PassableObject - a script that allows SCP-106 to pass through a primitive (configurable in Unity on the PrimitiveComponent)
 
 # AudioProjectMER
 AudioProjectMER is a plugin that allows you to play music/sounds in the game. It is required for the AudioPlayer object to work.
