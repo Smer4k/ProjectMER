@@ -140,7 +140,7 @@ public class ProjectMER : Plugin<Config>
 
 	public override string Author => "Michal78900 (fork by Smer4k)";
 
-	public override Version Version => new Version(2026, 7, 29, 1);
+	public override Version Version => new Version(2026, 8, 7, 1);
 
 	public override Version RequiredApiVersion => new Version(1, 0, 0, 0);
 }
