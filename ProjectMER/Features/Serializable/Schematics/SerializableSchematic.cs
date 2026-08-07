@@ -91,6 +91,18 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 		if (!instance.TryGetComponent(out SchematicObject schematicObject)) 
 			return;
 		
+		var players = Player.ReadyList.Where(p => !p.IsDummy && !p.IsNpc).ToList();
+		foreach (var cullingZone in schematicObject.gameObject.GetComponentsInChildren<CullingZoneObject>())
+		{
+			cullingZone.Pause = true;
+			foreach (var pl in players)
+			{
+				if (pl == null)
+					continue;
+				cullingZone.RemovePlayer(pl);
+			}
+		}
+		
 		foreach (var block in data.Blocks)
 		{
 			if (block.BlockType is not 
@@ -149,6 +161,12 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 				continue;
 			NetworkServer.UnSpawn(gameObject);
 			NetworkServer.Spawn(gameObject);
+		}
+		
+		foreach (var cullingZone in schematicObject.gameObject.GetComponentsInChildren<CullingZoneObject>())
+		{
+			cullingZone.RefreshNetIds();
+			cullingZone.Pause = false;
 		}
 	}
 	

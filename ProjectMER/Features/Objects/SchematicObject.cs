@@ -147,7 +147,6 @@ public class SchematicObject : MonoBehaviour
 		CreateRecursiveFromID(data.RootObjectId, data.Blocks, transform);
 		AddRigidbodies();
 		AddAnimators();
-		InitCullingZones(data.Blocks);
 		
 		Timing.CallDelayed(0.3f, () =>
 		{
@@ -159,6 +158,19 @@ public class SchematicObject : MonoBehaviour
 			foreach (var cullingZone in transform.GetComponentsInChildren<CullingZoneObject>())
 			{
 				_ = cullingZone.InitializeAsync();
+			}
+		});
+
+		Timing.CallDelayed(0.4f, () =>
+		{
+			InitCullingZones(data.Blocks);
+		});
+		
+		Timing.CallDelayed(0.7f, () =>
+		{
+			foreach (var damageableObject in transform.GetComponentsInChildren<DamageableObject>())
+			{
+				damageableObject.RegisterChildDestructibles(data.Blocks);
 			}
 		});
 
@@ -174,14 +186,7 @@ public class SchematicObject : MonoBehaviour
 			}
 		});
 		
-		// coroutine
-		foreach (var damageableObject in transform.GetComponentsInChildren<DamageableObject>())
-		{
-			damageableObject.RegisterChildDestructibles(data.Blocks);
-		}
-		
 		Schematic.OnSchematicSpawned(new(this, Name));
-
 		return this;
 	}
 

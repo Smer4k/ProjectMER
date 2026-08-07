@@ -1,11 +1,9 @@
 ﻿using AdminToys;
 using LabApi.Features.Wrappers;
-using MEC;
 using Mirror;
 using RelativePositioning;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
-using WaypointToy = AdminToys.WaypointToy;
 
 namespace ProjectMER.Features.Objects;
 
@@ -16,6 +14,7 @@ public sealed class CullingZoneObject : MonoBehaviour
     public int NumberOfObjectPerSpawn;
     public float ExitDebounceSeconds = 0.5f;
     public int BlocksCount => _networkIdentities.Count;
+    public bool Pause;
 
     private readonly Dictionary<uint, int> _insidePlayers = new();
     private readonly Dictionary<uint, CancellationTokenSource> _pendingHides = new();
@@ -46,6 +45,9 @@ public sealed class CullingZoneObject : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (Pause)
+            return;
+
         if (!other.CompareTag("Player"))
             return;
 
@@ -62,6 +64,9 @@ public sealed class CullingZoneObject : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (Pause)
+            return;
+
         if (!other.CompareTag("Player"))
             return;
 
@@ -125,18 +130,19 @@ public sealed class CullingZoneObject : MonoBehaviour
 
     private async Awaitable ProcessAwaitingAsync()
     {
-        if (_networkIdentities.Count == 0)
+        if (Pause || _networkIdentities.Count == 0)
             return;
         _processingAwaiting = true;
         try
         {
             while (_awaitingSpawn.Count > 0)
             {
-                if (destroyCancellationToken.IsCancellationRequested)
+                if (Pause || destroyCancellationToken.IsCancellationRequested)
                     return;
 
                 _awaitingSpawnSnapshotBuffer.Clear();
                 _awaitingSpawnSnapshotBuffer.AddRange(_awaitingSpawn.Keys);
+                var needRefreshNetIds = false;
 
                 foreach (var player in _awaitingSpawnSnapshotBuffer)
                 {
@@ -157,8 +163,15 @@ public sealed class CullingZoneObject : MonoBehaviour
                     var end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
                     for (var i = index; i < end; i++)
                     {
-                        if (destroyCancellationToken.IsCancellationRequested)
-                            return;
+                        if (_networkIdentities[i] == null)
+                        {
+                            _networkIdentities.RemoveAt(i);
+                            i--;
+                            end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
+                            needRefreshNetIds = true;
+                            continue;
+                        }
+
                         _networkIdentities[i].AddObserver(player.ConnectionToClient);
                         foreach (var spectator in spectators)
                         {
@@ -177,6 +190,9 @@ public sealed class CullingZoneObject : MonoBehaviour
                     }
                 }
 
+                if (needRefreshNetIds)
+                    RefreshNetIds();
+
                 await Awaitable.NextFrameAsync(destroyCancellationToken);
             }
         }
@@ -186,6 +202,15 @@ public sealed class CullingZoneObject : MonoBehaviour
         finally
         {
             _processingAwaiting = false;
+        }
+    }
+
+    public void RefreshNetIds()
+    {
+        _netIds.Clear();
+        foreach (var networkIdentity in _networkIdentities)
+        {
+            _netIds.Add(networkIdentity.netId);
         }
     }
 
@@ -246,12 +271,14 @@ public sealed class CullingZoneObject : MonoBehaviour
         {
             _awaitingSpawn.TryAdd(player, 0);
 
-            if (!_processingAwaiting)
+            if (!_processingAwaiting && !Pause)
                 _ = ProcessAwaitingAsync();
             return;
         }
 
-        ShowFor(player);
+        if (!Pause)
+            ShowFor(player);
+
         _loadedPlayers.Add(player.NetworkId);
     }
 
@@ -293,7 +320,8 @@ public sealed class CullingZoneObject : MonoBehaviour
 
             _loadedPlayers.Remove(player.NetworkId);
 
-            HideFor(player);
+            if (!Pause)
+                HideFor(player);
             _awaitingSpawn.Remove(player);
         }
         catch (OperationCanceledException)
