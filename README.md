@@ -9,7 +9,7 @@
 <img src="https://img.shields.io/github/downloads/Michal78900/MapEditorReborn/total?style=for-the-badge&logo=github" alt="Downloads">
 <a href="https://discord.gg/JwAfeSd79u">
     <img src="https://img.shields.io/discord/947849283514814486?style=for-the-badge&logo=discord" alt="Chat on Discord">
-</a>    
+</a>
 
 <div align="center">
 <h4>Fork downloads:</h4>
@@ -18,7 +18,8 @@
 
 </div>
 
-# Installation
+## Installation
+
 Put your [`MapEditorReborn.dll`](https://github.com/Michal78900/ProjectMER/releases/latest) file in `LabAPI-beta/plugins` path.
 Once your plugin will load, it will create directory `LapAPI-beta/configs/ProjectMER`; This directory will contain two sub-directories **Schematics** and **Maps**
 
@@ -26,7 +27,7 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 
 **More support can be found on a [Discord](https://discord.gg/JwAfeSd79u) server**
 
-# New in the fork
+## New in the fork
 
 - Waypoints are fixed
 - Added all objects from AdminToys, Doors, MirrorObjects, Clutter, PlayerBlocker, CullingParent and Trigger for schematics in Unity
@@ -44,14 +45,22 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 - CullingZone - if a player enters this zone, the child objects will appear for that player. (Works for SCP-079. Similar to how it works in MEROptimizer)
 - Generator - the generators that appear in the game can now be used
 - Scp106PassableObject - a script that allows SCP-106 to pass through a primitive (configurable in Unity on the PrimitiveComponent)
+- CameraTransfer - when SCP-079 switches to this camera, it will be redirected to the specified camera.
 
-# AudioProjectMER
+## AudioProjectMER
+
 AudioProjectMER is a plugin that allows you to play music/sounds in the game. It is required for the AudioPlayer object to work.
 
+## ProjectMER.HSM
+
+Plugin for HintServiceMeow ToolGun HUD
+
 **Required dependencies:**
+
 - [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio)
 
-# Credits
+## Credits
+
 - Plugin made by [Michal78900](https://github.com/Michal78900)
 - Original plugin idea and code overhaul by [Killers0992](https://github.com/Killers0992)
 - Another code overhaul and documentation by [Nao](https://github.com/NaoUnderscore)
