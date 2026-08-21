@@ -75,6 +75,12 @@ public class SchematicBlockData
 			}
 		}
 
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		if (Properties == null)
+		{
+			Properties = new();
+		}
+
 		GameObject? gameObject = BlockType switch
 		{
 			BlockType.Empty => CreateEmpty(schematicObject),
