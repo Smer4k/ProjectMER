@@ -110,6 +110,7 @@ public sealed class CullingZoneObject : MonoBehaviour
             if (!current.TryGetComponent<WaypointBase>(out _) &&
                 !current.TryGetComponent<Scp079CameraToy>(out _) &&
                 !current.TryGetComponent<PlayerBlockerObject>(out _) &&
+                !current.TryGetComponent<Scp106PassableObject>(out _) &&
                 current.TryGetComponent<NetworkIdentity>(out var networkIdentity))
             {
                 networkIdentity.visible = Visibility.ForceHidden;

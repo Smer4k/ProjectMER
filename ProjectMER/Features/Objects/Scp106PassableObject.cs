@@ -67,12 +67,20 @@ public sealed class Scp106PassableObject : MonoBehaviour
         if (canPassable)
         {
             player.ConnectionToClient.RemoveFromObserving(_collider.netIdentity, false);
+            _collider.netIdentity.RemoveObserver(player.ConnectionToClient);
             Physics.IgnoreCollision(fpcRole.FpcModule.CharController, _collider._collider, true);
         }
         else
         {
-            player.ConnectionToClient.AddToObserving(_collider.netIdentity);
+            _collider.netIdentity.AddObserver(player.ConnectionToClient);
             Physics.IgnoreCollision(fpcRole.FpcModule.CharController, _collider._collider, false);
         }
+    }
+
+    public void RefreshPassableFor(Player player)
+    {
+        if (player.RoleBase is not IFpcRole)
+            return;
+        SetPassableFor(player, player.Role == RoleTypeId.Scp106);
     }
 }
