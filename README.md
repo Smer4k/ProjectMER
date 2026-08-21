@@ -57,7 +57,7 @@ AudioProjectMER is a plugin that allows you to play music/sounds in the game. It
 
 ## ProjectMER.HSM
 
-Plugin for HintServiceMeow ToolGun HUD
+Plugin for [HintServiceMeow](https://github.com/MeowServer/HintServiceMeow) ToolGun HUD
 
 ## Credits
 
