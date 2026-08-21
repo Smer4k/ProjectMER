@@ -50,14 +50,13 @@ Once your plugin will load, it will create directory `LapAPI-beta/configs/Projec
 ## AudioProjectMER
 
 AudioProjectMER is a plugin that allows you to play music/sounds in the game. It is required for the AudioPlayer object to work.
+**Required dependencies:**
+
+- [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio)
 
 ## ProjectMER.HSM
 
 Plugin for HintServiceMeow ToolGun HUD
-
-**Required dependencies:**
-
-- [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio)
 
 ## Credits
 
