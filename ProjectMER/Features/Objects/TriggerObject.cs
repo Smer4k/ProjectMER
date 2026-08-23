@@ -6,7 +6,7 @@ namespace ProjectMER.Features.Objects;
 
 public class TriggerObject : MonoBehaviour
 {
-    public int ObjectId;
+    public long ObjectId;
     public SchematicObject SchematicObject;
     public Action<Player> OnPlayerEnter;
     public Action<Player> OnPlayerExit;

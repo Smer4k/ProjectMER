@@ -16,7 +16,7 @@ public sealed class DamageableObject : MonoBehaviour, IDestructible
 
     public uint NetworkId => _primitive.netId;
     public Vector3 CenterOfMass => transform.position;
-    public int ObjectId;
+    public long ObjectId;
     public SchematicObject? SchematicObject;
 
     public float Health = 100;
@@ -106,7 +106,7 @@ public sealed class DamageableObject : MonoBehaviour, IDestructible
         if (blocks != null && SchematicObject != null)
         {
             targets = new List<Transform>();
-            var ids = new HashSet<int> { ObjectId };
+            var ids = new HashSet<long> { ObjectId };
             foreach (var block in blocks)
             {
                 if (!ids.Contains(block.ParentId)

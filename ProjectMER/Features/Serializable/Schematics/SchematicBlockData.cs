@@ -34,9 +34,9 @@ public class SchematicBlockData
 {
 	public virtual string Name { get; set; }
 
-	public virtual int ObjectId { get; set; }
+	public virtual long ObjectId { get; set; }
 
-	public virtual int ParentId { get; set; }
+	public virtual long ParentId { get; set; }
 
 	public virtual string AnimatorName { get; set; }
 

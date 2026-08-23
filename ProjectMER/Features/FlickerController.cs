@@ -20,7 +20,7 @@ public sealed class FlickerController : MonoBehaviour
     public FacilityZone Zone = FacilityZone.None;
     public bool LightEnabled => _lightEnabled;
 
-    public int ObjectId;
+    public long ObjectId;
     
     public bool Cycle;
     
