@@ -194,11 +194,11 @@ public class GenericEventsHandler : CustomEventsHandler
 		if (ev.Player.IsDestroyed || ev.Player.IsDummy || ev.Player.IsNpc)
 			return;
 		
-		var cameraId = ev.Camera.Base.SyncId;
-		if (cameraId >= Scp079InteractableBase.OrderedInstances.Count)
+		var cameraId = ev.Camera.Base.SyncId - 1;
+		if (cameraId >= Scp079InteractableBase.OrderedInstances.Count || cameraId < 0)
 			return;
 		
-		var instance = Scp079InteractableBase.OrderedInstances[ev.Camera.Base.SyncId - 1];
+		var instance = Scp079InteractableBase.OrderedInstances[cameraId];
 		if (instance == null)
 			return;
 		
