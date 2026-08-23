@@ -3,6 +3,8 @@ using LabApi.Events.Arguments.Scp079Events;
 using LabApi.Events.CustomHandlers;
 using MEC;
 using PlayerRoles;
+using PlayerRoles.PlayableScps.Scp079;
+using PlayerRoles.PlayableScps.Scp079.Cameras;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
@@ -192,13 +194,22 @@ public class GenericEventsHandler : CustomEventsHandler
 		if (ev.Player.IsDestroyed || ev.Player.IsDummy || ev.Player.IsNpc)
 			return;
 		
+		var cameraId = ev.Camera.Base.SyncId;
+		if (cameraId >= Scp079InteractableBase.OrderedInstances.Count)
+			return;
+		
+		var instance = Scp079InteractableBase.OrderedInstances[ev.Camera.Base.SyncId - 1];
+		if (instance == null)
+			return;
+		
+		var targetCamera = (Scp079Camera)instance;
 		foreach (var zone in CullingZoneObject.AllCullingZone)
 		{
 			zone.RemovePlayer(ev.Player);
 		}
 		
 		var colliders = Physics.OverlapSphere(
-			ev.Camera.Base.CameraAnchor.position,
+			targetCamera.CameraAnchor.position,
 			0.5f,
 			-1,
 			QueryTriggerInteraction.Collide);
@@ -208,6 +219,12 @@ public class GenericEventsHandler : CustomEventsHandler
 			if (collider.TryGetComponent(out CullingZoneObject cullingContainer))
 			{
 				cullingContainer.AddPlayer(ev.Player);
+				foreach (var connected in cullingContainer.ConnectedZones)
+				{
+					if (connected == null)
+						continue;
+					connected.AddPlayer(ev.Player);
+				}
 			}
 		}
 	}
