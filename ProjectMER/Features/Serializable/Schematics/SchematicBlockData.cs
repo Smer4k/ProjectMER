@@ -714,6 +714,7 @@ public class SchematicBlockData
 	{
 		var empty = CreateEmpty();
 		var cullingZoneObject = empty.AddComponent<CullingZoneObject>();
+		empty.layer = 29; // fence
 		
 		if (Properties.TryGetValue("ObjectPerSpawn", out object numberOfObjectPerSpawnObj))
 			cullingZoneObject.NumberOfObjectPerSpawn = Convert.ToInt32(numberOfObjectPerSpawnObj);
