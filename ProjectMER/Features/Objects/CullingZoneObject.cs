@@ -57,8 +57,9 @@ public sealed class CullingZoneObject : MonoBehaviour
             return;
 
         var targets = ListPool<Player>.Shared.Rent();
-        player.CurrentSpectators.CopyTo(targets);
         targets.Add(player);
+        targets.AddRange(player.CurrentSpectators);
+        
         foreach (var target in targets)
         {
             if (target == null || target.IsDestroyed || target.IsDummy)
@@ -85,8 +86,9 @@ public sealed class CullingZoneObject : MonoBehaviour
             return;
 
         var targets = ListPool<Player>.Shared.Rent();
-        player.CurrentSpectators.CopyTo(targets);
         targets.Add(player);
+        targets.AddRange(player.CurrentSpectators);
+        
         foreach (var target in targets)
         {
             if (target == null || target.IsDestroyed || target.IsDummy)
