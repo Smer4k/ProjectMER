@@ -2,7 +2,6 @@ using AdminToys;
 using Footprinting;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
-using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using MapGeneration.Distributors;
@@ -840,9 +839,8 @@ public class SchematicBlockData
 				if (!schematicObject.ObjectFromId.TryGetValue(id, out var target) ||
 				    !target.TryGetComponent<Scp079CameraToy>(out var targetCamera))
 					return;
-				camera.gameObject.AddComponent<CameraTransferObject>().Init(camera.Camera);
+				camera.gameObject.AddComponent<CameraTransferObject>().Init(targetCamera.Camera);
 				camera.NetworkLabel = targetCamera.NetworkLabel;
-				camera.Camera.SyncId = targetCamera.Camera.SyncId;
 			});
 		}
 

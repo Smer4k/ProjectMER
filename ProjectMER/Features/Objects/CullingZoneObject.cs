@@ -1,6 +1,7 @@
 ﻿using AdminToys;
 using LabApi.Features.Wrappers;
 using Mirror;
+using NorthwoodLib.Pools;
 using RelativePositioning;
 using UnityEngine;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
@@ -55,11 +56,20 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        AddPlayer(player);
-        foreach (var zone in ConnectedZones)
+        var targets = ListPool<Player>.Shared.Rent();
+        player.CurrentSpectators.CopyTo(targets);
+        targets.Add(player);
+        foreach (var target in targets)
         {
-            zone.AddPlayer(player);
+            if (target == null || target.IsDestroyed || target.IsDummy)
+                continue;
+            AddPlayer(target);
+            foreach (var zone in ConnectedZones)
+            {
+                zone.AddPlayer(target);
+            } 
         }
+        ListPool<Player>.Shared.Return(targets);
     }
 
     private void OnTriggerExit(Collider other)
@@ -74,12 +84,20 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        RemovePlayer(player);
-
-        foreach (var zone in ConnectedZones)
+        var targets = ListPool<Player>.Shared.Rent();
+        player.CurrentSpectators.CopyTo(targets);
+        targets.Add(player);
+        foreach (var target in targets)
         {
-            zone.RemovePlayer(player);
+            if (target == null || target.IsDestroyed || target.IsDummy)
+                continue;
+            RemovePlayer(target);
+            foreach (var zone in ConnectedZones)
+            {
+                zone.RemovePlayer(target);
+            } 
         }
+        ListPool<Player>.Shared.Return(targets);
     }
 
     public async Awaitable InitializeAsync()
