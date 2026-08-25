@@ -458,7 +458,15 @@ public class SchematicBlockData
 		{
 			if (i > convertedChambers.Count - 1)
 				break;
-
+			
+			if (chamber.Base is PrecisionLockerChamber precisionLockerChamber)
+			{
+				if (precisionLockerChamber._spawnpointOverrides.Length > 1)
+					chamber.Base.Spawnpoint = precisionLockerChamber._spawnpointOverrides[1].Spawnpoint;
+				else if (precisionLockerChamber._spawnpointOverrides.Length == 1)
+					chamber.Base.Spawnpoint = precisionLockerChamber._spawnpointOverrides[0].Spawnpoint;
+			}
+			
 			chamber.AcceptableItems = convertedChambers[i].AcceptableItems.ToArray();
 			chamber.RequiredPermissions = convertedChambers[i].RequiredPermissions;
 			i++;
