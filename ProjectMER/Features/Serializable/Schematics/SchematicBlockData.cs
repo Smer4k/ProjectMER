@@ -648,7 +648,11 @@ public class SchematicBlockData
 
 	public GameObject? CreateTrigger(SchematicObject schematicObject)
 	{
-		GameObject gameObject = GameObject.Instantiate(new GameObject("Trigger"));
+		var empty = CreateEmpty();
+		var gameObject = empty.gameObject;
+		gameObject.name = "Trigger";
+		gameObject.layer = 29;
+		
 		var primitiveType = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]);
 		Collider collider;
 		switch (primitiveType)
