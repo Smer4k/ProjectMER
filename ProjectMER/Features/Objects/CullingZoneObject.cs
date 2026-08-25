@@ -56,21 +56,30 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        var targets = ListPool<Player>.Shared.Rent();
-        targets.Add(player);
-        targets.AddRange(player.CurrentSpectators);
-        
-        foreach (var target in targets)
+        AddPlayer(player);
+        foreach (var zone in ConnectedZones)
         {
-            if (target == null || target.IsDestroyed || target.IsDummy)
-                continue;
-            AddPlayer(target);
-            foreach (var zone in ConnectedZones)
-            {
-                zone.AddPlayer(target);
-            } 
+            zone.AddPlayer(player);
         }
-        ListPool<Player>.Shared.Return(targets);
+        
+        var spectators = player.CurrentSpectators;
+        try
+        {
+            foreach (var spectator in spectators)
+            {
+                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
+                    continue;
+                AddPlayer(spectator);
+                foreach (var zone in ConnectedZones)
+                {
+                    zone.AddPlayer(spectator);
+                }
+            }
+        }
+        finally
+        {
+            ListPool<Player>.Shared.Return(spectators);
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -85,21 +94,30 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        var targets = ListPool<Player>.Shared.Rent();
-        targets.Add(player);
-        targets.AddRange(player.CurrentSpectators);
-        
-        foreach (var target in targets)
+        RemovePlayer(player);
+        foreach (var zone in ConnectedZones)
         {
-            if (target == null || target.IsDestroyed || target.IsDummy)
-                continue;
-            RemovePlayer(target);
-            foreach (var zone in ConnectedZones)
-            {
-                zone.RemovePlayer(target);
-            } 
+            zone.RemovePlayer(player);
         }
-        ListPool<Player>.Shared.Return(targets);
+        
+        var spectators = player.CurrentSpectators;
+        try
+        {
+            foreach (var spectator in spectators)
+            {
+                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
+                    continue;
+                RemovePlayer(spectator);
+                foreach (var zone in ConnectedZones)
+                {
+                    zone.RemovePlayer(spectator);
+                }
+            }
+        }
+        finally
+        {
+            ListPool<Player>.Shared.Return(spectators);
+        }
     }
 
     public async Awaitable InitializeAsync()
@@ -178,7 +196,7 @@ public sealed class CullingZoneObject : MonoBehaviour
                         continue;
                     }
 
-                    var spectators = player.CurrentSpectators.ToList();
+                    var spectators = player.CurrentSpectators;
 
                     var index = _awaitingSpawn[player];
                     var end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
@@ -209,6 +227,8 @@ public sealed class CullingZoneObject : MonoBehaviour
                     {
                         _awaitingSpawn[player] = end;
                     }
+
+                    ListPool<Player>.Shared.Return(spectators);
                 }
 
                 if (needRefreshNetIds)
@@ -231,6 +251,8 @@ public sealed class CullingZoneObject : MonoBehaviour
         _netIds.Clear();
         foreach (var networkIdentity in _networkIdentities)
         {
+            if (networkIdentity == null)
+                continue;
             _netIds.Add(networkIdentity.netId);
         }
     }
@@ -370,9 +392,12 @@ public sealed class CullingZoneObject : MonoBehaviour
             identity.AddObserver(player.ConnectionToClient);
             foreach (var spectator in spectators)
             {
+                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
+                    continue;
                 identity.AddObserver(spectator.ConnectionToClient);
             }
         }
+        ListPool<Player>.Shared.Return(spectators);
     }
 
     public void HideFor(Player player)
@@ -396,9 +421,12 @@ public sealed class CullingZoneObject : MonoBehaviour
             _networkIdentities[i].RemoveObserver(player.ConnectionToClient);
             foreach (var spectator in spectators)
             {
+                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
+                    continue;
                 spectator.ConnectionToClient.RemoveFromObserving(_networkIdentities[i], false);
-                _networkIdentities[i].RemoveObserver(player.ConnectionToClient);
+                _networkIdentities[i].RemoveObserver(spectator.ConnectionToClient);
             }
         }
+        ListPool<Player>.Shared.Return(spectators);
     }
 }

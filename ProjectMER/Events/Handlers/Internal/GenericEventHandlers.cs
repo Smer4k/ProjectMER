@@ -211,39 +211,47 @@ public class GenericEventsHandler : CustomEventsHandler
 		
 		var targetCamera = ev.Camera.Base;
 		var targets = ListPool<Player>.Shared.Rent();
-		targets.AddRange(ev.Player.CurrentSpectators);
-		targets.Add(ev.Player);
-		
-		foreach (var zone in CullingZoneObject.AllCullingZone)
+		var spectators = ev.Player.CurrentSpectators;
+		try
 		{
-			foreach (var target in targets)
-			{
-				zone.RemovePlayer(target);
-			}
-		}
-		
-		var colliders = Physics.OverlapSphere(
-			targetCamera.CameraAnchor.position,
-			0.5f,
-			-1,
-			QueryTriggerInteraction.Collide);
+			targets.Add(ev.Player);
+			targets.AddRange(spectators);
 
-		foreach (var collider in colliders)
-		{
-			if (collider.TryGetComponent(out CullingZoneObject cullingContainer))
+			foreach (var zone in CullingZoneObject.AllCullingZone)
 			{
 				foreach (var target in targets)
 				{
-					cullingContainer.AddPlayer(target);
-					foreach (var connected in cullingContainer.ConnectedZones)
+					zone.RemovePlayer(target);
+				}
+			}
+
+			var colliders = Physics.OverlapSphere(
+				targetCamera.CameraAnchor.position,
+				0.5f,
+				-1,
+				QueryTriggerInteraction.Collide);
+
+			foreach (var collider in colliders)
+			{
+				if (collider.TryGetComponent(out CullingZoneObject cullingContainer))
+				{
+					foreach (var target in targets)
 					{
-						if (connected == null)
-							continue;
-						connected.AddPlayer(target);
+						cullingContainer.AddPlayer(target);
+						foreach (var connected in cullingContainer.ConnectedZones)
+						{
+							if (connected == null)
+								continue;
+							connected.AddPlayer(target);
+						}
 					}
 				}
 			}
 		}
-		ListPool<Player>.Shared.Return(targets);
+		finally
+		{
+			ListPool<Player>.Shared.Return(spectators);
+			ListPool<Player>.Shared.Return(targets);
+		}
 	}
 }
