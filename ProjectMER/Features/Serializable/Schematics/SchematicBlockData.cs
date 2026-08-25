@@ -459,7 +459,7 @@ public class SchematicBlockData
 			if (i > convertedChambers.Count - 1)
 				break;
 			
-			if (chamber.Base is PrecisionLockerChamber precisionLockerChamber)
+			if (chamber.Base is PrecisionLockerChamber precisionLockerChamber && chamber.Base.Spawnpoint == null)
 			{
 				if (precisionLockerChamber._spawnpointOverrides.Length > 1)
 					chamber.Base.Spawnpoint = precisionLockerChamber._spawnpointOverrides[1].Spawnpoint;
