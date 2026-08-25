@@ -189,20 +189,6 @@ public class GenericEventsHandler : CustomEventsHandler
 
 	public override void OnScp079ChangedCamera(Scp079ChangedCameraEventArgs ev)
 	{
-		if (ev.Camera.Base.IsToy && ev.Camera.GameObject.TryGetComponent(out CameraTransferObject cameraTransferObject) 
-		                         && ev.Player.RoleBase is Scp079Role scp079Role)
-		{
-			// Northwood epic moment
-			// If you try to change the camera in `OnScp079ChangingCamera`, it will cause a bunch of extra event calls and drain more energy from SCP‑079 than necessary, so I have to use a workaround like this.
-			var flag = cameraTransferObject.TargetCamera.Room.Zone == scp079Role._curCamSync.CurrentCamera.Room.Zone;
-			var targetTime = flag ? 0.11f : 0.99f;
-			ev.Camera = cameraTransferObject.TargetCamera;
-			Timing.CallDelayed(targetTime, () =>
-			{
-				scp079Role._curCamSync.CurrentCamera = cameraTransferObject.TargetCamera.Base;
-			});
-		}
-
 		if (CullingZoneObject.AllCullingZone.Count == 0)
 			return;
 		

@@ -852,7 +852,7 @@ public class SchematicBlockData
 				if (!schematicObject.ObjectFromId.TryGetValue(id, out var target) ||
 				    !target.TryGetComponent<Scp079CameraToy>(out var targetCamera))
 					return;
-				camera.gameObject.AddComponent<CameraTransferObject>().Init(targetCamera.Camera);
+				camera.gameObject.AddComponent<CameraTransferObject>().Init(camera.Camera, targetCamera.Camera);
 				camera.NetworkLabel = targetCamera.NetworkLabel;
 			});
 		}
