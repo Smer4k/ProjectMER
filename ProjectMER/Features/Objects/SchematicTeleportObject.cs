@@ -12,6 +12,9 @@ public class SchematicTeleportObject : MonoBehaviour
 
     public SchematicTeleportObject? GetRandomTarget()
     {
+        if (Targets.Count == 0)
+            return null;
+        
         string targetId = Targets.RandomItem();
 
         foreach (SchematicTeleportObject teleportObject in FindObjectsByType<SchematicTeleportObject>(
@@ -30,6 +33,9 @@ public class SchematicTeleportObject : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
+        if (!other.CompareTag("Player"))
+            return;
+        
         Player? player = Player.Get(other.gameObject);
         if (player is null)
             return;
