@@ -20,7 +20,7 @@ public sealed class ActionEventHostObject
 {
     public static Action<SchematicObject, ActionGame> OnAudioAction;
     
-    public ActionEventHostObject(SchematicObject schematic, int hostObjectId)
+    public ActionEventHostObject(SchematicObject schematic, long hostObjectId)
     {
         _schematic = schematic;
         _hostObjectId = hostObjectId;
@@ -148,7 +148,7 @@ public sealed class ActionEventHostObject
         if (string.IsNullOrWhiteSpace(action.Param))
             return;
 
-        int targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
+        var targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
         Animator? animator = ResolveAnimator(targetObjectId);
         if (animator == null)
         {
@@ -210,7 +210,7 @@ public sealed class ActionEventHostObject
         if (string.IsNullOrWhiteSpace(action.Param))
             return;
 
-        int targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
+        var targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
         if (!_schematic.ObjectFromId.TryGetValue(targetObjectId, out Transform targetTransform) ||
             targetTransform == null)
         {
@@ -405,7 +405,7 @@ public sealed class ActionEventHostObject
 
     private void ExecuteDestroy(ActionGame action)
     {
-        int targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
+        var targetObjectId = action.TargetId != 0 ? action.TargetId : _hostObjectId;
         if (!_schematic.ObjectFromId.TryGetValue(targetObjectId, out Transform targetTransform) ||
             targetTransform == null)
         {
@@ -426,7 +426,7 @@ public sealed class ActionEventHostObject
         NetworkServer.Destroy(targetTransform.gameObject);
     }
 
-    private Animator? ResolveAnimator(int targetObjectId)
+    private Animator? ResolveAnimator(long targetObjectId)
     {
         if (_animatorByObjectIdCache.TryGetValue(targetObjectId, out Animator cachedAnimator))
         {
@@ -460,7 +460,7 @@ public sealed class ActionEventHostObject
 
     private List<ActionEventList> _actionEvents = [];
     private readonly SchematicObject _schematic;
-    private readonly int _hostObjectId;
-    private readonly Dictionary<int, Animator> _animatorByObjectIdCache = [];
+    private readonly long _hostObjectId;
+    private readonly Dictionary<long, Animator> _animatorByObjectIdCache = [];
     private readonly Dictionary<string, int> _animStringHashCache = new(StringComparer.Ordinal);
 }

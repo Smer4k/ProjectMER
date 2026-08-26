@@ -136,7 +136,7 @@ public class SchematicObject : MonoBehaviour
 		Name = Path.GetFileNameWithoutExtension(data.Path);
 		DirectoryPath = data.Path;
 
-		ObjectFromId = new Dictionary<int, Transform>(data.Blocks.Count + 1)
+		ObjectFromId = new(data.Blocks.Count + 1)
 		{
 			{ data.RootObjectId, transform },
 		};
@@ -190,7 +190,7 @@ public class SchematicObject : MonoBehaviour
 		return this;
 	}
 
-	private void CreateRecursiveFromID(int id, List<SchematicBlockData> blocks, Transform parentGameObject)
+	private void CreateRecursiveFromID(long id, List<SchematicBlockData> blocks, Transform parentGameObject)
 	{
 		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
 		Transform? childGameObjectTransform = transform; // Create the object first before creating children.
@@ -201,7 +201,7 @@ public class SchematicObject : MonoBehaviour
 		if (childGameObjectTransform == null)
 			return;
 		
-		int[] parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
+		var parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
 
 		// Gets all the ObjectIds of all the schematic blocks inside "blocks" argument.
 		foreach (SchematicBlockData block in blocks.FindAll(c => c.ParentId == id))
@@ -260,7 +260,7 @@ public class SchematicObject : MonoBehaviour
 		ActionsByObjectId[block.ObjectId] = actionHost.ActionsByEventId;
 	}
 
-	public bool TryGetActionsByEventId(int objectId, string eventId, out List<ActionGame> actions)
+	public bool TryGetActionsByEventId(long objectId, string eventId, out List<ActionGame> actions)
 	{
 		actions = null!;
 
@@ -270,7 +270,7 @@ public class SchematicObject : MonoBehaviour
 		return actionsByEventId.TryGetValue(eventId, out actions);
 	}
 
-	public CoroutineHandle RunActionsByEventId(int objectId, string eventId, Player? target = null)
+	public CoroutineHandle RunActionsByEventId(long objectId, string eventId, Player? target = null)
 	{
 		if (!ActionHostsByObjectId.TryGetValue(objectId, out ActionEventHostObject actionHost))
 			return default;
@@ -439,10 +439,10 @@ public class SchematicObject : MonoBehaviour
 		Schematic.OnSchematicDestroyed(new(this, Name));
 	}
 
-	public Dictionary<int, Transform> ObjectFromId = [];
-	public Dictionary<int, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
-	public Dictionary<int, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
-	public Dictionary<int, AudioPlayerSettings> AudioPlayerSettingsByObjectId { get; } = [];
+	public Dictionary<long, Transform> ObjectFromId = [];
+	public Dictionary<long, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
+	public Dictionary<long, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
+	public Dictionary<long, AudioPlayerSettings> AudioPlayerSettingsByObjectId { get; } = [];
 	
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];
