@@ -240,4 +240,12 @@ public class GenericEventsHandler : CustomEventsHandler
 			ListPool<Player>.Shared.Return(targets);
 		}
 	}
+
+	public override void OnPlayerLeft(PlayerLeftEventArgs ev)
+	{
+		foreach (var zone in CullingZoneObject.AllCullingZone)
+		{
+			zone.OnPlayerLeft(ev.Player);
+		}
+	}
 }
