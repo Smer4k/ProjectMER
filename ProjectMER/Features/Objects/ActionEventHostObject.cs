@@ -236,6 +236,16 @@ public sealed class ActionEventHostObject
             return;
         }
 
+        switch (action.Param)
+        {
+            case "Rigidbody.isKinematic":
+                if (targetObj.TryGetComponent<Rigidbody>(out var rb))
+                {
+                    rb.isKinematic = action.Value.ParseBool();
+                }
+                return;
+        }
+
         switch (action.BlockType)
         {
             case BlockType.Primitive:
