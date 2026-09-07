@@ -155,10 +155,10 @@ public class SchematicObject : MonoBehaviour
 				playerBlockers.UpdateVisibility();
 			}
 
-			foreach (var cullingZone in transform.GetComponentsInChildren<CullingZoneObject>())
-			{
-				_ = cullingZone.InitializeAsync();
-			}
+			// foreach (var cullingZone in transform.GetComponentsInChildren<CullingZoneObject>())
+			// {
+			// 	_ = cullingZone.InitializeAsync();
+			// }
 		});
 
 		Timing.CallDelayed(0.4f, () =>
@@ -197,9 +197,47 @@ public class SchematicObject : MonoBehaviour
 
 		if (blockData != null)
 			childGameObjectTransform = CreateObject(blockData, parentGameObject);
-		
+
 		if (childGameObjectTransform == null)
 			return;
+		
+		int[] parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
+		var isCullingZone = childGameObjectTransform.TryGetComponent<CullingZoneObject>(out var cullingZoneObject);
+		// Gets all the ObjectIds of all the schematic blocks inside "blocks" argument.
+		foreach (SchematicBlockData block in blocks.FindAll(c => c.ParentId == id))
+		{
+			if (parentSchematics.Contains(block.ParentId)) // The block is a child of some schematic inside "parentSchematics" array, therefore it will be skipped to avoid spawning it and its children twice.
+				continue;
+			if (isCullingZone)
+			{
+				CreateRecursiveCullingZone(cullingZoneObject, block.ObjectId, blocks, childGameObjectTransform);
+				continue;
+			}
+			CreateRecursiveFromID(block.ObjectId, blocks, childGameObjectTransform); // The child now becomes the parent
+		}
+		if (isCullingZone)
+			cullingZoneObject.Init();
+	}
+
+	private void CreateRecursiveCullingZone(CullingZoneObject cullingZoneObject, int id, List<SchematicBlockData> blocks, Transform parentGameObject)
+	{
+		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
+		Transform? childGameObjectTransform = transform; // Create the object first before creating children.
+
+		if (blockData != null)
+			childGameObjectTransform = CreateObject(blockData, parentGameObject);
+
+		if (childGameObjectTransform == null)
+			return;
+
+		if (childGameObjectTransform.TryGetComponent<CullingZoneObject>(out var cullingZone))
+		{
+			cullingZoneObject = cullingZone;
+		}
+		else if (blockData != null)
+		{
+			cullingZoneObject.RegisterObject(childGameObjectTransform.gameObject, blockData.BlockType);
+		}
 		
 		int[] parentSchematics = blocks.Where(bl => bl.BlockType == BlockType.Schematic).Select(bl => bl.ObjectId).ToArray();
 
@@ -209,7 +247,7 @@ public class SchematicObject : MonoBehaviour
 			if (parentSchematics.Contains(block.ParentId)) // The block is a child of some schematic inside "parentSchematics" array, therefore it will be skipped to avoid spawning it and its children twice.
 				continue;
 
-			CreateRecursiveFromID(block.ObjectId, blocks, childGameObjectTransform); // The child now becomes the parent
+			CreateRecursiveCullingZone(cullingZoneObject, block.ObjectId, blocks, childGameObjectTransform); // The child now becomes the parent
 		}
 	}
 
@@ -240,9 +278,13 @@ public class SchematicObject : MonoBehaviour
 				ActionInteractableToy.Register(block, InteractableToy.Get(gameObject.GetComponent<InvisibleInteractableToy>()), this);
 			}
 		}
-		
-		if (block.BlockType != BlockType.Light && TryGetAnimatorController(block.AnimatorName, out RuntimeAnimatorController animatorController))
+
+		if (block.BlockType != BlockType.Light &&
+		    TryGetAnimatorController(block.AnimatorName, out RuntimeAnimatorController animatorController))
+		{
 			_animators.Add(gameObject, animatorController);
+			gameObject.AddComponent<AnimatorMarker>();
+		}
 
 		return gameObject.transform;
 	}

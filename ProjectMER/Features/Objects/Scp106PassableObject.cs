@@ -12,16 +12,16 @@ namespace ProjectMER.Features.Objects;
 public sealed class Scp106PassableObject : MonoBehaviour
 {
     public static readonly List<Scp106PassableObject> AllPassableObjects = [];
-    public const string ColliderName = "Scp106PassableObject";
+    public const string ColliderName = "Scp106PassableObject4jnrthfddfgmrt";
     private PrimitiveObjectToy _visual;
-    private PrimitiveObjectToy _collider;
+    public PrimitiveObjectToy Collider { get; private set; }
     
     private void Start()
     {
         _visual = GetComponent<PrimitiveObjectToy>();
-        _collider = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform).Base;
-        _collider.gameObject.name = ColliderName;
-        _collider.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        Collider = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform).Base;
+        Collider.gameObject.name = ColliderName;
+        Collider.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         Refresh();
         AllPassableObjects.Add(this);
     }
@@ -29,23 +29,23 @@ public sealed class Scp106PassableObject : MonoBehaviour
     public void OnDestroy()
     {
         AllPassableObjects.Remove(this);
-        if (_collider == null)
+        if (Collider == null)
             return;
-        NetworkServer.Destroy(_collider.gameObject);
+        NetworkServer.Destroy(Collider.gameObject);
     }
 
     public void Refresh()
     {
-        if (_collider == null)
+        if (Collider == null)
             return;
         if (_visual.NetworkPrimitiveFlags.HasFlag(PrimitiveFlags.Collidable))
             _visual.NetworkPrimitiveFlags &= ~PrimitiveFlags.Collidable;
         
-        _collider.NetworkIsStatic = true;
-        _collider.NetworkPrimitiveFlags = PrimitiveFlags.Collidable;
-        if (_visual.NetworkPrimitiveType != _collider.NetworkPrimitiveType)
+        Collider.NetworkIsStatic = true;
+        Collider.NetworkPrimitiveFlags = PrimitiveFlags.Collidable;
+        if (_visual.NetworkPrimitiveType != Collider.NetworkPrimitiveType)
         {
-            _collider.NetworkPrimitiveType = _visual.NetworkPrimitiveType;
+            Collider.NetworkPrimitiveType = _visual.NetworkPrimitiveType;
         }
 
         Timing.CallDelayed(1f, () =>
@@ -54,8 +54,8 @@ public sealed class Scp106PassableObject : MonoBehaviour
             {
                 if (player.Role != RoleTypeId.Scp106 || player.RoleBase is not IFpcRole fpcRole) 
                     continue;
-                player.ConnectionToClient.RemoveFromObserving(_collider.netIdentity, false);
-                Physics.IgnoreCollision(fpcRole.FpcModule.CharController, _collider._collider, true);
+                player.ConnectionToClient.RemoveFromObserving(Collider.netIdentity, false);
+                Physics.IgnoreCollision(fpcRole.FpcModule.CharController, Collider._collider, true);
             }
         });
     }
@@ -66,14 +66,14 @@ public sealed class Scp106PassableObject : MonoBehaviour
             return;
         if (canPassable)
         {
-            player.ConnectionToClient.RemoveFromObserving(_collider.netIdentity, false);
-            _collider.netIdentity.RemoveObserver(player.ConnectionToClient);
-            Physics.IgnoreCollision(fpcRole.FpcModule.CharController, _collider._collider, true);
+            player.ConnectionToClient.RemoveFromObserving(Collider.netIdentity, false);
+            Collider.netIdentity.RemoveObserver(player.ConnectionToClient);
+            Physics.IgnoreCollision(fpcRole.FpcModule.CharController, Collider._collider, true);
         }
         else
         {
-            _collider.netIdentity.AddObserver(player.ConnectionToClient);
-            Physics.IgnoreCollision(fpcRole.FpcModule.CharController, _collider._collider, false);
+            Collider.netIdentity.AddObserver(player.ConnectionToClient);
+            Physics.IgnoreCollision(fpcRole.FpcModule.CharController, Collider._collider, false);
         }
     }
 

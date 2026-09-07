@@ -2,10 +2,14 @@
 using LabApi.Features.Wrappers;
 using Mirror;
 using NorthwoodLib.Pools;
+using ProjectMER.Features.ClientSideToys;
+using ProjectMER.Features.Enums;
 using RelativePositioning;
 using UnityEngine;
+using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 using SpeakerToy = AdminToys.SpeakerToy;
+using TextToy = AdminToys.TextToy;
 
 namespace ProjectMER.Features.Objects;
 
@@ -16,7 +20,7 @@ public sealed class CullingZoneObject : MonoBehaviour
     public int NumberOfObjectPerSpawn;
     public float ExitDebounceSeconds = 0.5f;
     public int BlocksCount => _networkIdentities.Count;
-    public bool Pause;
+    public bool Pause = true;
 
     private readonly Dictionary<uint, HashSet<CullingZoneObject>> _insidePlayers = new();
     private readonly Dictionary<uint, CancellationTokenSource> _pendingHides = new();
@@ -26,10 +30,10 @@ public sealed class CullingZoneObject : MonoBehaviour
     private readonly List<Player> _awaitingSpawnSnapshotBuffer = [];
     private readonly List<NetworkIdentity> _networkIdentities = [];
     private readonly HashSet<uint> _netIds = [];
+    private readonly Dictionary<uint, ClientSideAdminToy> _clientSideAdminToys = new();
     private bool _processingAwaiting;
 
-    // private Coroutine _processingAwaitingCoroutine;
-    // private static readonly WaitForSeconds AwaitingSpawnWaitCheck = new WaitForSeconds(0.3f);
+    #region State
 
     public bool Contains(Player player) => _insidePlayers.ContainsKey(player.NetworkId);
 
@@ -46,6 +50,27 @@ public sealed class CullingZoneObject : MonoBehaviour
         _insidePlayers.Remove(player.NetworkId);
         _loadedPlayers.Remove(player.NetworkId);
     }
+    
+    public void Init()
+    {
+        if (_networkIdentities.Count == 0)
+            return;
+        foreach (var networkIdentity in _networkIdentities)
+        {
+            networkIdentity.visible = Visibility.ForceHidden;
+            NetworkServer.SendToObservers<ObjectHideMessage>(networkIdentity, new ObjectHideMessage()
+            {
+                netId = networkIdentity.netId
+            });
+            networkIdentity.ClearObservers();
+        }
+
+        Pause = false;
+    }
+
+    #endregion
+
+    #region Unity lifecycle
 
     private void Start()
     {
@@ -57,6 +82,10 @@ public sealed class CullingZoneObject : MonoBehaviour
         _processingAwaiting = false;
         AllCullingZone.Remove(this);
     }
+
+    #endregion
+
+    #region Trigger handling
 
     private void OnTriggerEnter(Collider other)
     {
@@ -70,30 +99,7 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        AddPlayer(player, this);
-        foreach (var zone in ConnectedZones)
-        {
-            zone.AddPlayer(player, this);
-        }
-
-        var spectators = player.CurrentSpectators;
-        try
-        {
-            foreach (var spectator in spectators)
-            {
-                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
-                    continue;
-                AddPlayer(spectator, this);
-                foreach (var zone in ConnectedZones)
-                {
-                    zone.AddPlayer(spectator, this);
-                }
-            }
-        }
-        finally
-        {
-            ListPool<Player>.Shared.Return(spectators);
-        }
+        UpdatePlayerPresence(player, true);
     }
 
     private void OnTriggerExit(Collider other)
@@ -108,82 +114,12 @@ public sealed class CullingZoneObject : MonoBehaviour
         if (player is null)
             return;
 
-        RemovePlayer(player, this);
-        foreach (var zone in ConnectedZones)
-        {
-            zone.RemovePlayer(player, this);
-        }
-
-        var spectators = player.CurrentSpectators;
-        try
-        {
-            foreach (var spectator in spectators)
-            {
-                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
-                    continue;
-                RemovePlayer(spectator, this);
-                foreach (var zone in ConnectedZones)
-                {
-                    zone.RemovePlayer(spectator, this);
-                }
-            }
-        }
-        finally
-        {
-            ListPool<Player>.Shared.Return(spectators);
-        }
+        UpdatePlayerPresence(player, false);
     }
 
-    public async Awaitable InitializeAsync()
-    {
-        _networkIdentities.Clear();
+    #endregion
 
-        var queue = new Queue<Transform>();
-        foreach (Transform child in transform)
-            queue.Enqueue(child);
-
-        float budgetDeadline = Time.realtimeSinceStartup + 2f / 1000f;
-
-        while (queue.Count > 0)
-        {
-            if (Time.realtimeSinceStartup >= budgetDeadline)
-            {
-                await Awaitable.NextFrameAsync();
-                budgetDeadline = Time.realtimeSinceStartup + 2f / 1000f;
-            }
-
-            var current = queue.Dequeue();
-            if (current == null || current.TryGetComponent<CullingZoneObject>(out _))
-                continue;
-            if (current.TryGetComponent(out PrimitiveObjectToy primitiveObjectToy) &&
-                primitiveObjectToy.gameObject.name == Scp106PassableObject.ColliderName)
-                continue;
-
-            if (current.TryGetComponent<NetworkIdentity>(out var networkIdentity))
-            {
-                // networkIdentity.visible = Visibility.ForceHidden;
-                // NetworkServer.SendToObservers<ObjectHideMessage>(networkIdentity, new ObjectHideMessage()
-                // {
-                //     netId = networkIdentity.netId
-                // });
-                // networkIdentity.ClearObservers();
-                _netIds.Add(networkIdentity.netId);
-                _networkIdentities.Add(networkIdentity);
-            }
-
-            if (current.TryGetComponent<WaypointBase>(out _) ||
-                current.TryGetComponent<Scp079CameraToy>(out _) ||
-                current.TryGetComponent<PlayerBlockerObject>(out _) ||
-                current.TryGetComponent<Scp106PassableObject>(out _) ||
-                current.TryGetComponent<SpeakerToy>(out _))
-            {
-                RemoveParentObjects(current);
-            }
-
-            foreach (Transform child in current)
-                queue.Enqueue(child);
-        }
-    }
+    #region Spawn queue
 
     private async Awaitable ProcessAwaitingAsync()
     {
@@ -227,6 +163,21 @@ public sealed class CullingZoneObject : MonoBehaviour
                                 i--;
                                 end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
                                 needRefreshNetIds = true;
+                                continue;
+                            }
+
+                            if (_clientSideAdminToys.TryGetValue(_networkIdentities[i].netId,
+                                    out var clientSideAdminToy))
+                            {
+                                clientSideAdminToy.Spawn(player.ConnectionToClient);
+                                foreach (var spectator in spectators)
+                                {
+                                    if (spectator == null || spectator.IsDestroyed || spectator.IsDummy ||
+                                        spectator.IsNpc)
+                                        continue;
+                                    clientSideAdminToy.Spawn(spectator.ConnectionToClient);
+                                }
+
                                 continue;
                             }
 
@@ -277,72 +228,123 @@ public sealed class CullingZoneObject : MonoBehaviour
         }
     }
 
-    // private IEnumerator ProcessAwaiting()
-    // {
-    //     _processingAwaiting = true;
-    //     while (_processingAwaiting)
-    //     {
-    //         if (Pause || _awaitingSpawn.Count == 0 || _networkIdentities.Count == 0)
-    //             yield return AwaitingSpawnWaitCheck;
-    //
-    //         _awaitingSpawnSnapshotBuffer.Clear();
-    //         _awaitingSpawnSnapshotBuffer.AddRange(_awaitingSpawn.Keys);
-    //         var needRefreshNetIds = false;
-    //
-    //         foreach (var player in _awaitingSpawnSnapshotBuffer)
-    //         {
-    //             if (player.IsDestroyed)
-    //             {
-    //                 _awaitingSpawn.Remove(player);
-    //                 continue;
-    //             }
-    //
-    //             if (!_insidePlayers.ContainsKey(player.NetworkId))
-    //             {
-    //                 continue;
-    //             }
-    //
-    //             var spectators = player.CurrentSpectators;
-    //
-    //             var index = _awaitingSpawn[player];
-    //             var end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
-    //             for (var i = index; i < end; i++)
-    //             {
-    //                 if (_networkIdentities[i] == null)
-    //                 {
-    //                     _networkIdentities.RemoveAt(i);
-    //                     i--;
-    //                     end = Mathf.Min(index + NumberOfObjectPerSpawn, _networkIdentities.Count);
-    //                     needRefreshNetIds = true;
-    //                     continue;
-    //                 }
-    //
-    //                 _networkIdentities[i].AddObserver(player.ConnectionToClient);
-    //                 foreach (var spectator in spectators)
-    //                 {
-    //                     _networkIdentities[i].AddObserver(spectator.ConnectionToClient);
-    //                 }
-    //             }
-    //
-    //             if (end >= _networkIdentities.Count)
-    //             {
-    //                 _loadedPlayers.Add(player.NetworkId);
-    //                 _awaitingSpawn.Remove(player);
-    //             }
-    //             else
-    //             {
-    //                 _awaitingSpawn[player] = end;
-    //             }
-    //
-    //             ListPool<Player>.Shared.Return(spectators);
-    //         }
-    //
-    //         if (needRefreshNetIds)
-    //             RefreshNetIds();
-    //
-    //         yield return null;
-    //     }
-    // }
+    #endregion
+
+    #region Object collection
+
+    public void RegisterObject(GameObject go, BlockType blockType)
+    {
+        if (!go.TryGetComponent<NetworkBehaviour>(out _) ||
+            !go.TryGetComponent<NetworkIdentity>(out var networkIdentity))
+        {
+            return;
+        }
+
+        if (blockType is BlockType.AudioPlayer or BlockType.Camera or BlockType.Waypoint or BlockType.Door
+                or BlockType.PlayerBlocker or BlockType.CameraTransfer || go.TryGetComponent<Scp106PassableObject>(out _))
+        {
+            RemoveParentObjects(go.transform);
+            return;
+        }
+
+        if (go.transform.parent.TryGetComponent<Scp106PassableObject>(out var childObject) && childObject.Collider.gameObject == go)
+        {
+            RemoveParentObjects(childObject.transform);
+            return;
+        }
+
+        _networkIdentities.Add(networkIdentity);
+        _netIds.Add(networkIdentity.netId);
+
+        if (go.GetComponentInParent<AnimatorMarker>() == null && go.TryGetComponent<AdminToyBase>(out var adminToyBase) && adminToyBase.NetworkIsStatic)
+        {
+            ClientSideAdminToy? clientSideAdminToy = null;
+            if (adminToyBase is PrimitiveObjectToy primitiveObjectToy)
+            {
+                clientSideAdminToy = new ClientSidePrimitive(primitiveObjectToy);
+            }
+            else if (adminToyBase is LightSourceToy lightSourceToy)
+            {
+                clientSideAdminToy = new ClientSideLightSourceToy(lightSourceToy);
+            }
+            else if (adminToyBase is TextToy textToy)
+            {
+                clientSideAdminToy = new ClientSideTextToy(textToy);
+            }
+
+            if (clientSideAdminToy != null)
+            {
+                _clientSideAdminToys[networkIdentity.netId] = clientSideAdminToy;
+            }
+        }
+    }
+
+    public async Awaitable InitializeAsync()
+    {
+        _networkIdentities.Clear();
+
+        var queue = new Queue<Transform>();
+        foreach (Transform child in transform)
+            queue.Enqueue(child);
+
+        float budgetDeadline = Time.realtimeSinceStartup + 10f / 1000f;
+
+        while (queue.Count > 0)
+        {
+            if (Time.realtimeSinceStartup >= budgetDeadline)
+            {
+                await Awaitable.NextFrameAsync();
+                budgetDeadline = Time.realtimeSinceStartup + 10f / 1000f;
+            }
+
+            var current = queue.Dequeue();
+            if (current == null || current.TryGetComponent<CullingZoneObject>(out _))
+                continue;
+            if (current.TryGetComponent(out PrimitiveObjectToy primitiveObjectToy) &&
+                primitiveObjectToy.gameObject.name == Scp106PassableObject.ColliderName)
+                continue;
+
+            if (current.TryGetComponent<NetworkIdentity>(out var networkIdentity))
+            {
+                _netIds.Add(networkIdentity.netId);
+                _networkIdentities.Add(networkIdentity);
+            }
+
+            if (current.TryGetComponent<WaypointBase>(out _) ||
+                current.TryGetComponent<Scp079CameraToy>(out _) ||
+                current.TryGetComponent<PlayerBlockerObject>(out _) ||
+                current.TryGetComponent<Scp106PassableObject>(out _) ||
+                current.TryGetComponent<SpeakerToy>(out _))
+            {
+                RemoveParentObjects(current);
+            }
+            else
+            {
+                ClientSideAdminToy? clientSideAdminToy = null;
+                if (current.TryGetComponent(out primitiveObjectToy))
+                    clientSideAdminToy = new ClientSidePrimitive(primitiveObjectToy);
+                else if (current.TryGetComponent(out LightSourceToy lightSourceToy))
+                    clientSideAdminToy = new ClientSideLightSourceToy(lightSourceToy);
+                else if (current.TryGetComponent(out TextToy textToy))
+                    clientSideAdminToy = new ClientSideTextToy(textToy);
+
+                if (clientSideAdminToy != null)
+                {
+                    _clientSideAdminToys[networkIdentity.netId] = clientSideAdminToy;
+                }
+
+                networkIdentity.visible = Visibility.ForceHidden;
+                NetworkServer.SendToObservers<ObjectHideMessage>(networkIdentity, new ObjectHideMessage()
+                {
+                    netId = networkIdentity.netId
+                });
+                networkIdentity.ClearObservers();
+            }
+
+            foreach (Transform child in current)
+                queue.Enqueue(child);
+        }
+    }
 
     public void RefreshNetIds()
     {
@@ -357,29 +359,25 @@ public sealed class CullingZoneObject : MonoBehaviour
 
     private void RemoveParentObjects(Transform current)
     {
+        if (current == null)
+            return;
+
         while (true)
         {
-            if (current == null) return;
             if (current.TryGetComponent<CullingZoneObject>(out _) || current.TryGetComponent<SchematicObject>(out _))
                 return;
             if (!current.TryGetComponent<NetworkIdentity>(out var networkIdentity))
             {
-                if (current.parent == null) return;
+                if (current.parent == null)
+                    return;
                 current = current.parent;
                 continue;
             }
 
-            if (current.parent == null)
-            {
-                networkIdentity.visible = Visibility.Default;
-                _netIds.Remove(networkIdentity.netId);
-                _networkIdentities.Remove(networkIdentity);
-                return;
-            }
-
-            networkIdentity.visible = Visibility.Default;
             _netIds.Remove(networkIdentity.netId);
             _networkIdentities.Remove(networkIdentity);
+            if (current.parent == null)
+                return;
             current = current.parent;
         }
     }
@@ -421,6 +419,36 @@ public sealed class CullingZoneObject : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Player presence
+
+    private void UpdatePlayerPresence(Player player, bool isEntering)
+    {
+        UpdatePlayerPresenceForZone(player, this, isEntering);
+        foreach (var zone in ConnectedZones)
+        {
+            zone.UpdatePlayerPresenceForZone(player, this, isEntering);
+        }
+
+        ForEachSpectator(player, spectator =>
+        {
+            UpdatePlayerPresenceForZone(spectator, this, isEntering);
+            foreach (var zone in ConnectedZones)
+            {
+                zone.UpdatePlayerPresenceForZone(spectator, this, isEntering);
+            }
+        });
+    }
+
+    private void UpdatePlayerPresenceForZone(Player player, CullingZoneObject source, bool isEntering)
+    {
+        if (isEntering)
+            AddPlayer(player, source);
+        else
+            RemovePlayer(player, source);
+    }
+
     public void AddPlayer(Player player) => AddPlayer(player, this);
 
     private void AddPlayer(Player player, CullingZoneObject source)
@@ -452,7 +480,6 @@ public sealed class CullingZoneObject : MonoBehaviour
             if (!_processingAwaiting && !Pause)
             {
                 _ = ProcessAwaitingAsync();
-                // _processingAwaitingCoroutine = StartCoroutine(ProcessAwaiting());
             }
 
             return;
@@ -495,6 +522,10 @@ public sealed class CullingZoneObject : MonoBehaviour
         _ = DebouncedHideAsync(player, cts);
     }
 
+    #endregion
+
+    #region Delayed hide
+
     private async Awaitable DebouncedHideAsync(Player player, CancellationTokenSource cts)
     {
         try
@@ -523,25 +554,25 @@ public sealed class CullingZoneObject : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Network visibility
+
     public void ShowFor(Player player)
     {
         if (_networkIdentities.Count == 0)
             return;
         if (player == null || player.IsDestroyed || player.IsDummy || player.IsNpc)
             return;
-        var spectators = player.CurrentSpectators;
-        foreach (var identity in _networkIdentities)
-        {
-            identity.AddObserver(player.ConnectionToClient);
-            foreach (var spectator in spectators)
-            {
-                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
-                    continue;
-                identity.AddObserver(spectator.ConnectionToClient);
-            }
-        }
 
-        ListPool<Player>.Shared.Return(spectators);
+        foreach (var identity in _networkIdentities)
+            identity.AddObserver(player.ConnectionToClient);
+
+        ForEachSpectator(player, spectator =>
+        {
+            foreach (var identity in _networkIdentities)
+                identity.AddObserver(spectator.ConnectionToClient);
+        });
     }
 
     public void HideFor(Player player)
@@ -550,8 +581,6 @@ public sealed class CullingZoneObject : MonoBehaviour
             return;
         if (player == null || player.IsDestroyed || player.IsDummy || player.IsNpc)
             return;
-        var spectators = player.CurrentSpectators;
-
         if (!_awaitingSpawn.TryGetValue(player, out var index))
         {
             index = _networkIdentities.Count;
@@ -563,15 +592,36 @@ public sealed class CullingZoneObject : MonoBehaviour
         {
             player.ConnectionToClient.RemoveFromObserving(_networkIdentities[i], false);
             _networkIdentities[i].RemoveObserver(player.ConnectionToClient);
-            foreach (var spectator in spectators)
+        }
+
+        ForEachSpectator(player, spectator =>
+        {
+            for (var i = 0; i < index; i++)
             {
-                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy)
-                    continue;
                 spectator.ConnectionToClient.RemoveFromObserving(_networkIdentities[i], false);
                 _networkIdentities[i].RemoveObserver(spectator.ConnectionToClient);
             }
-        }
-
-        ListPool<Player>.Shared.Return(spectators);
+        });
     }
+
+    private static void ForEachSpectator(Player player, Action<Player> action)
+    {
+        var spectators = player.CurrentSpectators;
+        try
+        {
+            foreach (var spectator in spectators)
+            {
+                if (spectator == null || spectator.IsDestroyed || spectator.IsDummy || spectator.IsNpc)
+                    continue;
+
+                action(spectator);
+            }
+        }
+        finally
+        {
+            ListPool<Player>.Shared.Return(spectators);
+        }
+    }
+
+    #endregion
 }
