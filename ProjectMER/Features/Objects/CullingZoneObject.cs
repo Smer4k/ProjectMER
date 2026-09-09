@@ -53,18 +53,18 @@ public sealed class CullingZoneObject : MonoBehaviour
     
     public void Init()
     {
-        if (_networkIdentities.Count == 0)
-            return;
-        foreach (var networkIdentity in _networkIdentities)
+        if (_networkIdentities.Count != 0)
         {
-            networkIdentity.visible = Visibility.ForceHidden;
-            NetworkServer.SendToObservers<ObjectHideMessage>(networkIdentity, new ObjectHideMessage()
+            foreach (var networkIdentity in _networkIdentities)
             {
-                netId = networkIdentity.netId
-            });
-            networkIdentity.ClearObservers();
+                networkIdentity.visible = Visibility.ForceHidden;
+                NetworkServer.SendToObservers<ObjectHideMessage>(networkIdentity, new ObjectHideMessage()
+                {
+                    netId = networkIdentity.netId
+                });
+                networkIdentity.ClearObservers();
+            }
         }
-
         Pause = false;
     }
 
@@ -255,6 +255,9 @@ public sealed class CullingZoneObject : MonoBehaviour
 
         _networkIdentities.Add(networkIdentity);
         _netIds.Add(networkIdentity.netId);
+        
+        if (go.TryGetComponent<FlickerController>(out _))
+            return;
 
         if (go.GetComponentInParent<AnimatorMarker>() == null && go.TryGetComponent<AdminToyBase>(out var adminToyBase) && adminToyBase.NetworkIsStatic)
         {
@@ -391,11 +394,11 @@ public sealed class CullingZoneObject : MonoBehaviour
         var netIds = target.GetComponentsInChildren<NetworkIdentity>();
         foreach (var identity in netIds)
         {
-            RemoveSingleObject(identity);
+            RemoveSingleObject(identity, true);
         }
     }
 
-    private void RemoveSingleObject(NetworkIdentity target)
+    private void RemoveSingleObject(NetworkIdentity target, bool isChild = false)
     {
         if (!Contains(target))
             return;
@@ -407,7 +410,8 @@ public sealed class CullingZoneObject : MonoBehaviour
         _netIds.Remove(target.netId);
         _networkIdentities.RemoveAt(removedIndex);
         target.visible = Visibility.Default;
-        target.transform.SetParent(null);
+        if (!isChild)
+            target.transform.SetParent(null);
 
         if (_awaitingSpawn.Count <= 0)
             return;
