@@ -146,11 +146,11 @@ public class GenericEventsHandler : CustomEventsHandler
 					zone.AddPlayer(ev.Player);
 				}
 			});
-		} else if (ev.OldRole == RoleTypeId.Filmmaker)
+		} else if (ev.OldRole is RoleTypeId.Filmmaker or RoleTypeId.Spectator or RoleTypeId.Overwatch)
 		{
 			Timing.CallDelayed(0.5f, () =>
 			{
-				if (ev.Player == null || ev.Player.IsDestroyed || ev.NewRole.RoleTypeId == RoleTypeId.Filmmaker)
+				if (ev.Player == null || ev.Player.IsDestroyed || ev.NewRole.RoleTypeId is RoleTypeId.Filmmaker)
 					return;
 				foreach (var zone in CullingZoneObject.AllCullingZone)
 				{
@@ -170,20 +170,12 @@ public class GenericEventsHandler : CustomEventsHandler
 	{
 		if (CullingZoneObject.AllCullingZone.Count == 0)
 			return;
-		if (ev.Player == null || ev.Player.IsDestroyed || ev.Player.IsNpc || ev.Player.IsDummy || ev.NewTarget == null)
+		if (ev.Player == null || ev.Player.IsDestroyed || ev.Player.IsNpc || ev.Player.IsDummy)
 			return;
 
 		foreach (var zone in CullingZoneObject.AllCullingZone)
 		{
-			if (ev.OldTarget != null && zone.Contains(ev.OldTarget) && !zone.Contains(ev.NewTarget))
-			{
-				zone.HideFor(ev.Player);
-			}
-
-			if (zone.Contains(ev.NewTarget) && (ev.OldTarget == null || !zone.Contains(ev.OldTarget)))
-			{
-				zone.ShowFor(ev.Player);
-			}
+			zone.UpdateSpectatorTarget(ev.Player, ev.OldTarget, ev.NewTarget);
 		}
 	}
 

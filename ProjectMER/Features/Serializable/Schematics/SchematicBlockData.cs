@@ -1,4 +1,5 @@
 using AdminToys;
+using CommandSystem.Commands.Shared;
 using Footprinting;
 using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Items.Firearms.Attachments;
@@ -587,6 +588,10 @@ public class SchematicBlockData
 	private GameObject CreateWaypoint()
 	{
 		WaypointToy waypoint = GameObject.Instantiate(PrefabManager.Waypoint);
+		if (Properties.TryGetValue("Priority", out var priorityObj))
+		{
+			waypoint.NetworkPriority = Convert.ToSingle(priorityObj);
+		}
 		return waypoint.gameObject;
 	}
 
