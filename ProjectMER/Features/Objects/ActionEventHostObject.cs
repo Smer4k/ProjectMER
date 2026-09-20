@@ -344,7 +344,7 @@ public sealed class ActionEventHostObject
                         interactable.NetworkInteractionDuration = action.Value.ParseFloat();
                         break;
                     case "IsLocked":
-                        interactable.IsLocked = action.Value.ParseBool();
+                        interactable.NetworkIsLocked = action.Value.ParseBool();
                         break;
                     case nameof(ActionInteractableToy.Permissions):
                         if (!ActionInteractableToy.Instances.TryGetValue(InteractableToy.Get(interactable), out var actionInteractableToy))
