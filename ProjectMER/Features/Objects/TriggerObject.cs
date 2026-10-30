@@ -72,6 +72,8 @@ public class TriggerObject : MonoBehaviour
                 return;
 
             player = Player.Get(other.gameObject);
+            if (player == null)
+                return;
         } else if (TargetType == TriggerTargetType.Trigger)
         {
             if (!other.TryGetComponent(out TriggerObject triggerObject))

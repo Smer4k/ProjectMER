@@ -74,6 +74,58 @@ public class SerializableSchematic : SerializableObject, IIndicatorDefinition
 		return schematic.gameObject;
 	}
 
+	public override async Awaitable<GameObject?> AsyncSpawnOrUpdateObject(Room? room = null, GameObject? instance = null)
+	{
+		PrimitiveObjectToy schematic = instance == null ? UnityEngine.Object.Instantiate(PrefabManager.PrimitiveObject) : instance.GetComponent<PrimitiveObjectToy>();
+		schematic.NetworkPrimitiveFlags = PrimitiveFlags.None;
+		schematic.NetworkMovementSmoothing = 60;
+
+		Vector3 position = room.GetAbsolutePosition(Position);
+		Quaternion rotation = room.GetAbsoluteRotation(Rotation);
+		_prevIndex = Index;
+
+		schematic.name = $"CustomSchematic-{SchematicName}";
+		schematic.transform.SetPositionAndRotation(position, rotation);
+		schematic.transform.localScale = Scale;
+
+		FlickerController.OnSchematicUpdate(schematic.gameObject);
+		UpdatePositionCustomObjects(schematic);
+		
+		if (instance == null)
+		{
+			SchematicObjectDataList data;
+			bool success;
+			if (FolderPath != null)
+			{
+				success = MapUtils.TryGetSchematicDataByName(FolderPath, SchematicName, out data);
+			}
+			else
+			{
+				success = MapUtils.TryGetSchematicDataByName(SchematicName, out data);
+			}
+
+			if (!success)
+			{
+				GameObject.Destroy(schematic.gameObject);
+				return null;
+			}
+
+			SchematicSpawningEventArgs ev = new(data, SchematicName);
+			Schematic.OnSchematicSpawning(ev);
+			data = ev.Data;
+
+			if (!ev.IsAllowed)
+			{
+				GameObject.Destroy(schematic.gameObject);
+				return null;
+			}
+			
+			NetworkServer.Spawn(schematic.gameObject);
+			await schematic.gameObject.AddComponent<SchematicObject>().AsyncInit(data);
+		}
+		return schematic.gameObject;
+	}
+
 	public void UpdatePositionCustomObjects(GameObject instance, bool updateDoors = true)
 	{
 		SchematicObjectDataList data;

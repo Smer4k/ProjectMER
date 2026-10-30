@@ -8,6 +8,18 @@ namespace ProjectMER.Features;
 
 public static class ObjectSpawner
 {
+	public static async Awaitable<SchematicObject> AsyncSpawnSchematic(SerializableSchematic schematic)
+	{
+		if (!PrefabManager.Initialized)
+		{
+			PrefabManager.RegisterPrefabs();
+		}
+		var gameObject = await schematic.AsyncSpawnOrUpdateObject();
+		if (gameObject == null)
+			return null!;
+		return gameObject.GetComponent<SchematicObject>();
+	}
+	
 	public static PrimitiveObjectToy SpawnPrimitive(SerializablePrimitive serializablePrimitive)
 	{
 		if (!PrefabManager.Initialized)

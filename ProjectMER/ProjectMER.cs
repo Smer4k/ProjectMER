@@ -11,7 +11,7 @@ using ProjectMER.Features;
 
 namespace ProjectMER;
 
-public class ProjectMER : Plugin<Config>
+public sealed class ProjectMER : Plugin<Config>
 {
 	private Harmony _harmony;
 	private FileSystemWatcher _mapFileSystemWatcher;
@@ -81,6 +81,7 @@ public class ProjectMER : Plugin<Config>
 		CustomHandlersManager.RegisterEventsHandler(PickupEventsHandler);
 		CustomHandlersManager.RegisterEventsHandler(FlickerEventsHandler);
 		CustomHandlersManager.RegisterEventsHandler(InteractableEventsHandler);
+		AdminToysHandler.Register();
 		
 		_harmony = new Harmony($"michal78900.mapEditorReborn-{DateTime.Now.Ticks}");
 		_harmony.PatchAll();
@@ -121,6 +122,7 @@ public class ProjectMER : Plugin<Config>
 
 	public override void Disable()
 	{
+		Features.ClientSideToys.ClientSideToyManager.Clear();
 		Singleton = null!;
 
 		CustomHandlersManager.UnregisterEventsHandler(GenericEventsHandler);
@@ -129,6 +131,7 @@ public class ProjectMER : Plugin<Config>
 		CustomHandlersManager.UnregisterEventsHandler(PickupEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(FlickerEventsHandler);
 		CustomHandlersManager.UnregisterEventsHandler(InteractableEventsHandler);
+		AdminToysHandler.Unregister();
 		
 		_harmony.UnpatchAll();
 		_mapFileSystemWatcher?.Dispose();

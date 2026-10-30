@@ -102,10 +102,7 @@ public class Create : ICommand
 			return false;
 		}
 
-		ToolGunHandler.CreateObject(position, ToolGunObjectType.Schematic, objectName);
-		if (Config.AutoSelect && player is not null)
-			ToolGunHandler.SelectObject(player, MapUtils.UntitledMap.SpawnedObjects.LastOrDefault());
-
+		_ = ToolGunHandler.AsyncCreateObject(position, ToolGunObjectType.Schematic, objectName);
 		response = $"{objectName} has been successfully spawned!";
 		return true;
 	}

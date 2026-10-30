@@ -145,6 +145,25 @@ public class MapSchematic
 
 		ListPool<Room>.Shared.Return(rooms);
 	}
+	
+	public async Awaitable AsyncSpawnObject<T>(string id, T serializableObject) where T : SerializableObject
+	{
+		List<Room> rooms = serializableObject.GetRooms();
+		foreach (Room room in rooms)
+		{
+			if (serializableObject.Index < 0 || serializableObject.Index == room.GetRoomIndex())
+			{
+				GameObject? gameObject = await serializableObject.AsyncSpawnOrUpdateObject(room);
+				if (gameObject == null)
+					continue;
+
+				MapEditorObject mapEditorObject = gameObject.AddComponent<MapEditorObject>().Init(serializableObject, Name, id, room);
+				SpawnedObjects.Add(mapEditorObject);
+			}
+		}
+
+		ListPool<Room>.Shared.Return(rooms);
+	}
 
 	public void DestroyObject(string id)
 	{

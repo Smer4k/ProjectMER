@@ -5,6 +5,7 @@ using MEC;
 using Mirror;
 using ProjectMER.Events.Handlers;
 using ProjectMER.Features.Actions;
+using ProjectMER.Features.ClientSideToys;
 using ProjectMER.Features.Enums;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Serializable.Schematics;
@@ -190,6 +191,121 @@ public class SchematicObject : MonoBehaviour
 		return this;
 	}
 
+	public async Awaitable<SchematicObject?> AsyncInit(SchematicObjectDataList data)
+	{
+		_asyncBlockCounter = 0;
+		Name = Path.GetFileNameWithoutExtension(data.Path);
+		DirectoryPath = data.Path;
+
+		ObjectFromId = new Dictionary<int, Transform>(data.Blocks.Count + 1)
+		{
+			{ data.RootObjectId, transform },
+		};
+
+		ActionHostsByObjectId.Clear();
+		ActionsByObjectId.Clear();
+
+		await AsyncCreateRecursiveFromId(data.RootObjectId, data.Blocks, transform);
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return null;
+		}
+		AddRigidbodies();
+		AddAnimators();
+
+		await Awaitable.WaitForSecondsAsync(0.3f, destroyCancellationToken);
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return null;
+		}
+		foreach (var playerBlockers in transform.GetComponentsInChildren<PlayerBlockerObject>())
+		{
+			playerBlockers.UpdateVisibility();
+		}
+
+		await Awaitable.WaitForSecondsAsync(0.4f, destroyCancellationToken);
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return null;
+		}
+		
+		InitCullingZones(data.Blocks);
+		await Awaitable.WaitForSecondsAsync(0.7f, destroyCancellationToken);
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return null;
+		}
+		
+		foreach (var damageableObject in transform.GetComponentsInChildren<DamageableObject>())
+		{
+			damageableObject.RegisterChildDestructibles(data.Blocks);
+		}
+
+		await Awaitable.WaitForSecondsAsync(0.5f, destroyCancellationToken);
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return null;
+		}
+		foreach (var locker in transform.GetComponentsInChildren<Locker>())
+		{
+			foreach (var itemPickupBase in locker.GetComponentsInChildren<ItemPickupBase>())
+			{
+				if (itemPickupBase.TryGetComponent(out Rigidbody rigidbody))
+					rigidbody.isKinematic = false;
+			}
+		}
+		
+		Schematic.OnSchematicSpawned(new(this, Name));
+		return this;
+	}
+
+	private async Awaitable AsyncCreateRecursiveFromId(int id, List<SchematicBlockData> blocks,
+		Transform parentGameObject)
+	{
+		// Уступаем кадр каждые 1000 созданных блоков.
+		if (++_asyncBlockCounter % 1000 == 0)
+			await Awaitable.NextFrameAsync(destroyCancellationToken);
+
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return;
+		}
+		
+		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
+		Transform? childGameObjectTransform = transform; // Create the object first before creating children.
+
+		if (blockData != null)
+			childGameObjectTransform = CreateObject(blockData, parentGameObject);
+
+		if (childGameObjectTransform == null)
+			return;
+
+		int[] parentSchematics = blocks
+			.Where(bl => bl.BlockType == BlockType.Schematic)
+			.Select(bl => bl.ObjectId)
+			.ToArray();
+
+		bool isCullingZone = childGameObjectTransform.TryGetComponent<CullingZoneObject>(out var cullingZoneObject);
+
+		// Gets all the ObjectIds of all the schematic blocks inside "blocks" argument.
+		foreach (SchematicBlockData block in blocks.FindAll(c => c.ParentId == id))
+		{
+			if (parentSchematics.Contains(block.ParentId)) // The block is a child of some schematic inside "parentSchematics" array, therefore it will be skipped to avoid spawning it and its children twice.
+				continue;
+
+			if (isCullingZone)
+			{
+				await AsyncCreateRecursiveCullingZone(cullingZoneObject!, block.ObjectId, blocks, childGameObjectTransform);
+				continue;
+			}
+
+			await AsyncCreateRecursiveFromId(block.ObjectId, blocks, childGameObjectTransform); // The child now becomes the parent
+		}
+
+		if (isCullingZone)
+			cullingZoneObject!.Init();
+	}
+
 	private void CreateRecursiveFromID(int id, List<SchematicBlockData> blocks, Transform parentGameObject)
 	{
 		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
@@ -217,6 +333,49 @@ public class SchematicObject : MonoBehaviour
 		}
 		if (isCullingZone)
 			cullingZoneObject.Init();
+	}
+	
+	private async Awaitable AsyncCreateRecursiveCullingZone(CullingZoneObject cullingZoneObject, int id,
+		List<SchematicBlockData> blocks, Transform parentGameObject)
+	{
+		if (++_asyncBlockCounter % 1000 == 0)
+			await Awaitable.NextFrameAsync(destroyCancellationToken);
+
+		if (destroyCancellationToken.IsCancellationRequested)
+		{
+			return;
+		}
+		
+		SchematicBlockData? blockData = blocks.Find(c => c.ObjectId == id);
+		Transform? childGameObjectTransform = transform;
+
+		if (blockData != null)
+			childGameObjectTransform = CreateObject(blockData, parentGameObject);
+
+		if (childGameObjectTransform == null)
+			return;
+
+		if (childGameObjectTransform.TryGetComponent<CullingZoneObject>(out var cullingZone))
+		{
+			cullingZoneObject = cullingZone;
+		}
+		else if (blockData != null)
+		{
+			cullingZoneObject.RegisterObject(childGameObjectTransform.gameObject, blockData.BlockType);
+		}
+
+		int[] parentSchematics = blocks
+			.Where(bl => bl.BlockType == BlockType.Schematic)
+			.Select(bl => bl.ObjectId)
+			.ToArray();
+
+		foreach (SchematicBlockData block in blocks.FindAll(c => c.ParentId == id))
+		{
+			if (parentSchematics.Contains(block.ParentId))
+				continue;
+
+			await AsyncCreateRecursiveCullingZone(cullingZoneObject, block.ObjectId, blocks, childGameObjectTransform);
+		}
 	}
 
 	private void CreateRecursiveCullingZone(CullingZoneObject cullingZoneObject, int id, List<SchematicBlockData> blocks, Transform parentGameObject)
@@ -255,6 +414,9 @@ public class SchematicObject : MonoBehaviour
 	{
 		if (block == null)
 			return null;
+		
+		if (parentTransform != null && block.ShouldCreateClientSideToy() && parentTransform.GetComponentInParent<CullingZoneObject>() == null)
+			return CreateClientSideToy(block, parentTransform);
 
 		GameObject? gameObject = block.Create(this, parentTransform);
 		
@@ -287,6 +449,28 @@ public class SchematicObject : MonoBehaviour
 		}
 
 		return gameObject.transform;
+	}
+
+	private Transform? CreateClientSideToy(SchematicBlockData block, Transform parentTransform)
+	{
+		ClientSideToyAnchor anchor = block.CreateClientSideToyAnchor();
+		var anchorGameObject = anchor.gameObject;
+		anchorGameObject.name = block.Name;
+
+		Transform objectTransform = anchorGameObject.transform;
+		objectTransform.SetParent(parentTransform);
+		objectTransform.SetLocalPositionAndRotation(block.Position, Quaternion.Euler(block.Rotation));
+		objectTransform.localScale = block.Scale;
+		
+		if (!block.TryCreateClientSideToy(anchor, parentTransform, out ClientSideAdminToy? clientSideToy))
+		{
+			GameObject.Destroy(anchorGameObject);
+			return null;
+		}
+
+		ClientSideToyManager.Register(clientSideToy!);
+		ObjectFromId.Add(block.ObjectId, objectTransform);
+		return objectTransform;
 	}
 
 	private void RegisterActionHost(SchematicBlockData block)
@@ -485,9 +669,11 @@ public class SchematicObject : MonoBehaviour
 	public Dictionary<int, ActionEventHostObject> ActionHostsByObjectId { get; } = [];
 	public Dictionary<int, Dictionary<string, List<ActionGame>>> ActionsByObjectId { get; } = [];
 	public Dictionary<int, AudioPlayerSettings> AudioPlayerSettingsByObjectId { get; } = [];
+	public Dictionary<string, SchematicTeleportObject> TeleportObjects { get; } = new();
 	
 	private readonly List<GameObject> _attachedBlocks = [];
 	private readonly List<NetworkIdentity> _networkIdentities = [];
 	private readonly List<AdminToyBase> _adminToyBases = [];
 	private readonly Dictionary<GameObject, RuntimeAnimatorController> _animators = [];
+	private int _asyncBlockCounter;
 }

@@ -19,6 +19,9 @@ public class Config
 	[Description("The radius at which SCP 2176 will turn off LightSourceToy (if they have Flicker enabled)")]
 	public float LightDisablingRadiusScp2176 { get; set; } = 16.0f;
 
+	[Description("Static primitive, light, and text schematic blocks are sent to clients without spawning their visual server objects. Collidable primitives retain a server-side collider.")]
+	public bool UseClientSideStaticToys { get; set; } = false;
+
 	public bool ActionEnabled  { get; set; } = true;
 	
 	public List<string> BannedCommandsForActions { get; set; } =

@@ -76,6 +76,58 @@ public static class ToolGunHandler
 		}
 	}
 
+	public static async Awaitable AsyncCreateObject(Vector3 position, ToolGunObjectType objectType, string schematicName = "")
+	{
+		Room room = RoomExtensions.GetRoomAtPosition(position);
+
+		position = room.Name == RoomName.Outside ? position : room.Transform.InverseTransformPoint(position);
+		string roomId = room.GetRoomStringId();
+
+		MapSchematic map = MapUtils.UntitledMap;
+		string id = Guid.NewGuid().ToString("N").Substring(0, 8);
+
+		SerializableObject serializableObject = (SerializableObject)Activator.CreateInstance(ToolGunItem.TypesDictionary[objectType]);
+		serializableObject.Room = roomId;
+		serializableObject.Index = room.GetRoomIndex();
+
+		switch (serializableObject)
+		{
+			case SerializablePlayerSpawnpoint _:
+			{
+				serializableObject.Position = position + Vector3.up * 0.01f;
+				break;
+			}
+
+			case SerializableTeleport _:
+			{
+				serializableObject.Position = position + Vector3.up;
+				break;
+			}
+
+			case SerializableSchematic serializableSchematic:
+			{
+				serializableObject.Position = position;
+				serializableSchematic.SchematicName = schematicName!;
+				break;
+			}
+
+			default:
+				serializableObject.Position = position;
+				break;
+		}
+
+		if (map.TryAddElement(id, serializableObject))
+			await map.AsyncSpawnObject(id, serializableObject);
+
+		foreach (MapEditorObject mapEditorObject in map.SpawnedObjects)
+		{
+			if (mapEditorObject.Id != id)
+				continue;
+
+			IndicatorObject.TrySpawnOrUpdateIndicator(mapEditorObject);
+		}
+	}
+
 	public static void DeleteObject(MapEditorObject mapEditorObject)
 	{
 		IndicatorObject.TryDestroyIndicator(mapEditorObject);

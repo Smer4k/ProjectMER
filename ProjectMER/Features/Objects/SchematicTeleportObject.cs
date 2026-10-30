@@ -9,26 +9,29 @@ public class SchematicTeleportObject : MonoBehaviour
     public string Id { get; set; }
     public float Cooldown { get; set; } = 5f;
     public List<string> Targets { get; set; } = [];
+    public SchematicObject? SchematicObject { get; private set; }
+    
+    private void OnDestroy()
+    {
+        if (SchematicObject == null)
+            return;
+        SchematicObject.TeleportObjects.Remove(Id);
+    }
 
+    public void Register(SchematicObject? schematicObject)
+    {
+        if (schematicObject == null || SchematicObject != null)
+            return;
+        SchematicObject = schematicObject;
+        SchematicObject.TeleportObjects.Add(Id, this);
+    }
+    
     public SchematicTeleportObject? GetRandomTarget()
     {
-        if (Targets.Count == 0)
+        if (Targets.Count == 0 || SchematicObject == null)
             return null;
         
-        string targetId = Targets.RandomItem();
-
-        foreach (SchematicTeleportObject teleportObject in FindObjectsByType<SchematicTeleportObject>(
-                     FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-        {
-            if (teleportObject.Id != targetId)
-            {
-                continue;
-            }
-
-            return teleportObject;
-        }
-
-        return null;
+        return SchematicObject.TeleportObjects.GetValueOrDefault(Targets.RandomItem());
     }
 
     public void OnTriggerEnter(Collider other)
