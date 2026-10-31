@@ -103,6 +103,15 @@ public class SchematicBlockData
 				Size = Properties["DisplaySize"].ToVector2() * 20f,
 				TextFormat = Convert.ToString(Properties["Text"]),
 			},
+			BlockType.Capybara => new ClientSideCapybara()
+			{
+				Collidable	= Properties.TryGetValue("Collidable", out object collidableObj) && Convert.ToBoolean(collidableObj),
+			},
+			BlockType.CullingParent => new ClientSideCullingParent()
+			{
+				BoundsPosition	= parentTransform != null ? parentTransform.TransformPoint(Position) : Position,
+				Size = Properties.TryGetValue("BoundsSize", out var value) ? value.ToVector3() : Scale,
+			},
 			_ => null!,
 		};
 

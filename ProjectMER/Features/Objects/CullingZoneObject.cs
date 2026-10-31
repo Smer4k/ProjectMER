@@ -6,6 +6,7 @@ using ProjectMER.Features.ClientSideToys;
 using ProjectMER.Features.Enums;
 using RelativePositioning;
 using UnityEngine;
+using CapybaraToy = AdminToys.CapybaraToy;
 using LightSourceToy = AdminToys.LightSourceToy;
 using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 using SpeakerToy = AdminToys.SpeakerToy;
@@ -255,6 +256,9 @@ public sealed class CullingZoneObject : MonoBehaviour
             else if (adminToyBase is TextToy textToy)
             {
                 clientSideAdminToy = new ClientSideTextToy(textToy);
+            } else if (adminToyBase is CapybaraToy capybaraToy)
+            {
+                clientSideAdminToy = new ClientSideCapybara(capybaraToy);
             }
 
             if (clientSideAdminToy != null)
