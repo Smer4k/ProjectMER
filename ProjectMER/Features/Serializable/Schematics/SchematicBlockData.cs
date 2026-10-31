@@ -105,7 +105,7 @@ public class SchematicBlockData
 			},
 			BlockType.Capybara => new ClientSideCapybara()
 			{
-				Collidable	= Properties.TryGetValue("Collidable", out object collidableObj) && Convert.ToBoolean(collidableObj),
+				Collidable = !Properties.TryGetValue("Collidable", out object collidableObj) || Convert.ToBoolean(collidableObj),
 			},
 			BlockType.CullingParent => new ClientSideCullingParent()
 			{
@@ -675,7 +675,14 @@ public class SchematicBlockData
 	private GameObject CreateCapybara()
 	{
 		CapybaraToy capybaraToy = GameObject.Instantiate(PrefabManager.Capybara);
-		capybaraToy.CollisionsEnabled = true;
+		if (Properties.TryGetValue("Collidable", out object collidableObj))
+		{
+			capybaraToy.NetworkCollisionsEnabled = Convert.ToBoolean(collidableObj);
+		}
+		else
+		{
+			capybaraToy.NetworkCollisionsEnabled = true;
+		}
 		return capybaraToy.gameObject;
 	}
 
