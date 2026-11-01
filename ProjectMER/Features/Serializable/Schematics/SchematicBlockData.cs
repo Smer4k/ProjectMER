@@ -68,6 +68,8 @@ public class SchematicBlockData
 				!Convert.ToBoolean(scp106Passable),
 			BlockType.Light => !Properties.TryGetValue("Flicker", out object flicker) || !Convert.ToBoolean(flicker),
 			BlockType.Text => true,
+			BlockType.Capybara => true,
+			BlockType.CullingParent => true,
 			_ => false,
 		};
 	}
