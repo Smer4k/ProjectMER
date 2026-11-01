@@ -254,6 +254,8 @@ public class GenericEventsHandler : CustomEventsHandler
 			return;
 		foreach (var passableObject in PassableObject.AllPassableObjects)
 		{
+			if (!passableObject.GhostlyPassable)
+				continue;
 			passableObject.SetPassableFor(ev.Player, ev.Intensity > 0);
 		}
 	}
