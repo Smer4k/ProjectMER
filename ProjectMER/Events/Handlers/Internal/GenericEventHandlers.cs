@@ -110,13 +110,13 @@ public class GenericEventsHandler : CustomEventsHandler
 
 		if (ev.NewRole.RoleTypeId == RoleTypeId.Scp106)
 		{
-			foreach (var passableObject in Scp106PassableObject.AllPassableObjects)
+			foreach (var passableObject in PassableObject.AllPassableObjects)
 			{
 				passableObject.SetPassableFor(ev.Player, true);
 			}
 		} else if (ev.OldRole == RoleTypeId.Scp106)
 		{
-			foreach (var passableObject in Scp106PassableObject.AllPassableObjects)
+			foreach (var passableObject in PassableObject.AllPassableObjects)
 			{
 				passableObject.SetPassableFor(ev.Player, false);
 			}

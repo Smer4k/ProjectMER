@@ -224,13 +224,13 @@ public sealed class CullingZoneObject : MonoBehaviour
         }
 
         if (blockType is BlockType.AudioPlayer or BlockType.Camera or BlockType.Waypoint or BlockType.Door
-                or BlockType.PlayerBlocker or BlockType.CameraTransfer || go.TryGetComponent<Scp106PassableObject>(out _))
+                or BlockType.PlayerBlocker or BlockType.CameraTransfer || go.TryGetComponent<PassableObject>(out _))
         {
             RemoveParentObjects(go.transform);
             return;
         }
 
-        if (go.transform.parent.TryGetComponent<Scp106PassableObject>(out var childObject) && childObject.Collider.gameObject == go)
+        if (go.transform.parent.TryGetComponent<PassableObject>(out var childObject) && childObject.Collider.gameObject == go)
         {
             RemoveParentObjects(childObject.transform);
             return;
@@ -290,7 +290,7 @@ public sealed class CullingZoneObject : MonoBehaviour
             if (current == null || current.TryGetComponent<CullingZoneObject>(out _))
                 continue;
             if (current.TryGetComponent(out PrimitiveObjectToy primitiveObjectToy) &&
-                primitiveObjectToy.gameObject.name == Scp106PassableObject.ColliderName)
+                primitiveObjectToy.gameObject.name == PassableObject.ColliderName)
                 continue;
 
             if (current.TryGetComponent<NetworkIdentity>(out var networkIdentity))
@@ -302,7 +302,7 @@ public sealed class CullingZoneObject : MonoBehaviour
             if (current.TryGetComponent<WaypointBase>(out _) ||
                 current.TryGetComponent<Scp079CameraToy>(out _) ||
                 current.TryGetComponent<PlayerBlockerObject>(out _) ||
-                current.TryGetComponent<Scp106PassableObject>(out _) ||
+                current.TryGetComponent<PassableObject>(out _) ||
                 current.TryGetComponent<SpeakerToy>(out _))
             {
                 RemoveParentObjects(current);

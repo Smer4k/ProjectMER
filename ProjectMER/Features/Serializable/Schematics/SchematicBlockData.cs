@@ -366,10 +366,23 @@ public class SchematicBlockData
 		
 		primitive.NetworkPrimitiveFlags = GetPrimitiveFlags();
 
-		if (Properties.TryGetValue("Scp106Passable", out object scp106PassableObj)
-		    && Convert.ToBoolean(scp106PassableObj))
+		var scp106Passable = false;
+		var ghostlyPassable = false;
+		if (Properties.TryGetValue("Scp106Passable", out object scp106PassableObj))
 		{
-			primitive.gameObject.AddComponent<Scp106PassableObject>();
+			scp106Passable = Convert.ToBoolean(scp106PassableObj);
+		}
+
+		if (Properties.TryGetValue("GhostlyPassable", out object ghostlyPassableObj))
+		{
+			ghostlyPassable = Convert.ToBoolean(ghostlyPassableObj);
+		}
+
+		if (scp106Passable || ghostlyPassable)
+		{
+			var passableObject = primitive.gameObject.AddComponent<PassableObject>();
+			passableObject.CanScp106Pass = scp106Passable;
+			passableObject.GhostlyPassable = ghostlyPassable;
 		}
 		
 		return primitive.gameObject;

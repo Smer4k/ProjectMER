@@ -1,4 +1,5 @@
 ﻿using AdminToys;
+using CustomPlayerEffects;
 using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
@@ -9,12 +10,14 @@ using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
 namespace ProjectMER.Features.Objects;
 
-public sealed class Scp106PassableObject : MonoBehaviour
+public sealed class PassableObject : MonoBehaviour
 {
-    public static readonly List<Scp106PassableObject> AllPassableObjects = [];
+    public static readonly List<PassableObject> AllPassableObjects = [];
     public const string ColliderName = "Scp106PassableObject4jnrthfddfgmrt";
     private PrimitiveObjectToy _visual;
     public PrimitiveObjectToy Collider { get; private set; }
+    public bool CanScp106Pass { get; set; }
+    public bool GhostlyPassable { get; set; }
     
     private void Start()
     {
@@ -52,10 +55,18 @@ public sealed class Scp106PassableObject : MonoBehaviour
         {
             foreach (var player in Player.ReadyList)
             {
-                if (player.Role != RoleTypeId.Scp106 || player.RoleBase is not IFpcRole fpcRole) 
+                if (player.RoleBase is not IFpcRole) 
                     continue;
-                player.ConnectionToClient.RemoveFromObserving(Collider.netIdentity, false);
-                Physics.IgnoreCollision(fpcRole.FpcModule.CharController, Collider._collider, true);
+                if (CanScp106Pass && player.Role == RoleTypeId.Scp106)
+                {
+                    SetPassableFor(player, true);
+                    continue;
+                }
+
+                if (GhostlyPassable && player.HasEffect<Ghostly>())
+                {
+                    SetPassableFor(player, true);
+                }
             }
         });
     }
@@ -81,6 +92,7 @@ public sealed class Scp106PassableObject : MonoBehaviour
     {
         if (player.RoleBase is not IFpcRole)
             return;
-        SetPassableFor(player, player.Role == RoleTypeId.Scp106);
+        SetPassableFor(player, (CanScp106Pass && player.Role == RoleTypeId.Scp106) 
+                               || (GhostlyPassable && player.HasEffect<Ghostly>()));
     }
 }
