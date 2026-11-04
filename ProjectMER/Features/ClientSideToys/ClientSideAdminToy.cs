@@ -39,6 +39,12 @@ public abstract class ClientSideAdminToy
     {
         if (parent == null)
             return;
+        
+        if (parent.TryGetComponent(out ClientSideToyAnchor anchor))
+        {
+            ParentNetId = anchor.NetId;
+        }
+        
         if (parent.TryGetComponent(out NetworkIdentity networkIdentity))
         {
             ParentNetId = networkIdentity.netId;

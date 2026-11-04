@@ -64,8 +64,11 @@ public class SchematicBlockData
 
 		return BlockType switch
 		{
-			BlockType.Primitive => !Properties.TryGetValue("Scp106Passable", out object scp106Passable) ||
-				!Convert.ToBoolean(scp106Passable),
+			BlockType.Empty => !Properties.TryGetValue("Damageable", out object damageableObj) || !Convert.ToBoolean(damageableObj),
+			BlockType.Primitive => (!Properties.TryGetValue("Scp106Passable", out object scp106Passable) 
+			                        || !Convert.ToBoolean(scp106Passable)) && 
+			                       (!Properties.TryGetValue("GhostlyPassable", out object ghostlyPassable) 
+			                        || !Convert.ToBoolean(ghostlyPassable)),
 			BlockType.Light => !Properties.TryGetValue("Flicker", out object flicker) || !Convert.ToBoolean(flicker),
 			BlockType.Text => true,
 			BlockType.Capybara => true,
@@ -93,6 +96,12 @@ public class SchematicBlockData
 
 		ClientSideAdminToy toy = BlockType switch
 		{
+			BlockType.Empty => new ClientSidePrimitive()
+			{
+				Type = PrimitiveType.Cube,
+				Color = Color.white,
+				Flags = PrimitiveFlags.None
+			},
 			BlockType.Primitive => new ClientSidePrimitive
 			{
 				Type = (PrimitiveType)Convert.ToInt32(Properties["PrimitiveType"]),
@@ -383,7 +392,7 @@ public class SchematicBlockData
 		if (scp106Passable || ghostlyPassable)
 		{
 			var passableObject = primitive.gameObject.AddComponent<PassableObject>();
-			passableObject.CanScp106Pass = scp106Passable;
+			passableObject.Scp106Passable = scp106Passable;
 			passableObject.GhostlyPassable = ghostlyPassable;
 		}
 		

@@ -16,7 +16,7 @@ public sealed class PassableObject : MonoBehaviour
     public const string ColliderName = "Scp106PassableObject4jnrthfddfgmrt";
     private PrimitiveObjectToy _visual;
     public PrimitiveObjectToy Collider { get; private set; }
-    public bool CanScp106Pass { get; set; }
+    public bool Scp106Passable { get; set; }
     public bool GhostlyPassable { get; set; }
     
     private void Start()
@@ -57,16 +57,7 @@ public sealed class PassableObject : MonoBehaviour
             {
                 if (player.RoleBase is not IFpcRole) 
                     continue;
-                if (CanScp106Pass && player.Role == RoleTypeId.Scp106)
-                {
-                    SetPassableFor(player, true);
-                    continue;
-                }
-
-                if (GhostlyPassable && player.HasEffect<Ghostly>())
-                {
-                    SetPassableFor(player, true);
-                }
+                SetPassableFor(player, (Scp106Passable && player.Role == RoleTypeId.Scp106) || (GhostlyPassable && player.HasEffect<Ghostly>()));
             }
         });
     }
@@ -92,7 +83,7 @@ public sealed class PassableObject : MonoBehaviour
     {
         if (player.RoleBase is not IFpcRole)
             return;
-        SetPassableFor(player, (CanScp106Pass && player.Role == RoleTypeId.Scp106) 
+        SetPassableFor(player, (Scp106Passable && player.Role == RoleTypeId.Scp106) 
                                || (GhostlyPassable && player.HasEffect<Ghostly>()));
     }
 }
